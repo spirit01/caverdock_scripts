@@ -1,0 +1,67 @@
+README
+
+parse_structures_from_caverdock.py pouštím na svém lokálním stroji.
+
+ukázka spuštění:
+
+../process_data_META/run_amber/parse_structures_from_caverdock.py
+-file_path ./test.pdbqt-ub.pdbqt -protein ./1RC2-h.pdb
+-source /home/petrahrozkova/Dokumenty/HPC/1RC2_protein/
+
+META:
+run_amber pouštím na META, ukázka vstupu:
+
+- je dobré zkontrolovat verzi pythonu na META. Ne vždy je tam verze 3.6 + přidat modul ambru
+
+DŮLEŽITÉ! module add amber-18, 16 a 14. Záleží na pořadí. a python-3.6.
+ amber-16 - zlobí %8.3 format
+ anber-18 - vypadá to lépe. Problém s pyton-3.6. a amber
+
+(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-18
+(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-16
+(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-14
+(STRETCH)petrahrozkova@elmo5-12:~$ module add python-3.4.1-gcc
+(STRETCH)petrahrozkova@elmo5-12:~$ pwd
+/storage/brno11-elixir/home/petrahrozkova
+
+./run_amber.py -source ./trajectorie
+bash run_21_run_meta - pusti qsub ./_21_run-mm_meta.sh na vsechny slozky trajectories
+bash skript_out_2_pdb - vytvori z emin1.rst > emin1.pdb
+
+NTB:
+nutno zkopirovat :útrajectories na ntb pro dalsi analyzu
+collect_result vytvoří soubor - pouštím u sebe, vytvori soubor result_CD_AMBER.txt, ze ktereho
+graf_porovnani_CD_amber.txt udela graf_CD_amber.png
+
+antechamber potřebuje přesný rozestup mezi sloupci v pdb ligand
+ATOM      9  H6  TIP d   1      79.318   8.180 -26.934  1.00  0.00      posi H
+
+
+make_trajectorie_from_amber - vezme všechny emin5.pdb a udělá z toho jeden velký pd soubor,
+kde jednotlive behy jsou odddeleny jako MODEL číslo.
+Nutno ještě ručně %s/END//g odstranit END a dát jenom jeden nakonec souboru.
+
+tvorba_slozky_s_pdb_soubory - vytvori složku, kde jsou pouze emin5.pdb pro lepší vizualizaci.
+Nutno mít v trajectories. Slozka pdb_files musi byt vytvorena
+
+make_trajectorie_from_amber - - vytvori soubor, kde jsou pouze emin5.pdb pro lepší vizualizaci.
+Nutno mít v trajectories. Zároveň jsou jednotlivé struktury odděleny pomocí MODEL
+
+export TXT=""; for (( i = 60; i < 70; i++ )); do export TXT=$TXT"struktura_model_$i.pdb";
+done; pymol $TXT
+
+ve slozce, kde je uz ligand vytazeny z pdb souboru
+export TXT=""; for (( i = 1; i < 143; i++ )); do export TXT=$TXT" ligand_$i.pdb"; done; pymol $TXT
+
+
+- vytvoří list, který rovnou předhodí pymolu pro hezkou vizualizaci
+
+data:
+trajectorie_omz_ligand ->    ntr=1,restraint_wt=1.0,restraintmask='@CA,C,N|(:TIP)@C1'
+trajectories_omz_vsechno ->    ntr=1,restraint_wt=100.0,restraintmask='@CA,C,N'
+-> slozka s emin5.pdb je v kazde slozce. spustim pomoci:
+export TXT=""; for (( i = 60; i < 70; i++ )); do export TXT=$TXT" model_$i.pdb";
+done; pymol $TXT
+
+udela hezke movie z ligandu
+echo "" > model-movie.pdb; for (( i=0; i < 145; i++ )); do cd model_$i; echo "MODEL $i" >> ../model-movie.pdb; grep TIP emin5.pdb >> ../model-movie.pdb; echo "ENDMDL" >> ../model-movie.pdb; cd ..; done

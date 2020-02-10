@@ -1,0 +1,7 @@
+for i in ./*/;
+    do
+        cd "$i";
+        echo "$i"
+        tail -11 emin1.pdb > ligand_1.pdb;
+        cd ../;
+    done
