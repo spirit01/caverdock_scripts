@@ -65,3 +65,19 @@ done; pymol $TXT
 
 udela hezke movie z ligandu
 echo "" > model-movie.pdb; for (( i=0; i < 145; i++ )); do cd model_$i; echo "MODEL $i" >> ../model-movie.pdb; grep TIP emin5.pdb >> ../model-movie.pdb; echo "ENDMDL" >> ../model-movie.pdb; cd ..; done
+
+parametr pro zadání úlohy amber
+qsub -I -N NN-min -l select=1:ncpus=8:mem=2gb:scratch_local=1gb -j oe -m a -l walltime=24:0:0
+
+ /home/petrahrozkova/MGLTools-1.5.6/mgltools_i86Linux2_1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/
+
+for i in /home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p1/32/trajectories/*; do  cd $i; ls ; echo $i; cp ../../../../../_21* .;  done; cd ..;
+
+for i in /home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p1/32/trajectories/model_*/; do cd $i;/opt/mgltools-1.5.6/bin/pythonsh /opt/mgltools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py -f "$i"position_ligand_*.pdbqt -o "$i"ligand.pdb; done
+
+caverdock_1.1.sif is in singularity: singularity run (-B slozka:/home/) caverdcok_1.1.sif
+
+kopiruje jenom vybraný soubor ze složky do složky
+rsync -av --prune-empty-dirs --include '*/' --include 'emin5.pdb' --exclude '*' perian:/storage/plzen1/home/petrahrozkova/jirka_test_data/1/aspirin/trajectories/ .;
+
+for i in /home/petrahrozkova/Dokumenty/HPC/test_amber_plus_caverdock/halogenasa_uprava_podle_amberu/data_testovani_amber/fix_all/lb/p3/wt/protein_*/; do cd $i; ls; cd-energyprofile -d tun-ex.dsd -t result_caverdock-lb.pdbqt -s 0 > energy_lb.dat; done;

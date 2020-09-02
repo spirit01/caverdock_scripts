@@ -6,10 +6,13 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import sys
 import shutil
 import subprocess
 from argparse import ArgumentParser
 from pathlib import Path
+from spython.main import Client
+from Bio.PDB import *
 
 
 def get_argument():
@@ -36,11 +39,43 @@ def parse_structures(file_string):
     file_all = re.findall('MODEL.*?ENDMDL', file_string, re.DOTALL)
     return file_all
 
+def check_files(source, protein):
+    if not Path(f'{source}/_Xqmin_tmp.in').is_file():
+        print("File _Xqmin_tmp.in not exist")
+        sys.exit(1)
+
+    if not Path(f'{source}/{protein}').is_file():
+        print(f'File {protein} not exist')
+        sys.exit(1)
+
+    if not Path(f'{source}/_11_run_tleap.sh').is_file():
+        print("File _11_run_tleap.sh not exist")
+        sys.exit(1)
+
+    if not Path(f'{source}/_21_run-mm_meta.sh').is_file():
+        print("File _21_run-mm_meta.sh not exist")
+        sys.exit(1)
+
+    if not Path(f'{source}/ligand.prepi').is_file():
+        try:
+            subprocess.call("antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi", shell = True)
+        except:
+            print("File ligand.prepi not exist")
+            sys.exit(1)
 
 def make_separate_directory(file_all, protein, source):
-    os.mkdir('trajectories')
+    #shutil.rmtree('trajectories')
+    isdir = os.path.isdir('trajectories')
+    if isdir == False:
+        print('not exist')
+        os.mkdir('trajectories')
+    else:
+        print('exist')
+
     for count, file in enumerate(file_all, start=0):
-        os.mkdir(f'./trajectories/model_{count}')
+        ismod = os.path.isdir(f'./trajectories/model_{count}')
+        if ismod == False:
+            os.mkdir(f'./trajectories/model_{count}')
         with open(f'./trajectories/model_{count}/position_ligand_{count}.pdbqt', 'w') as file_traj:
             file_traj.write(file)
         shutil.copy(protein, f'./trajectories/model_{count}/')
@@ -48,37 +83,51 @@ def make_separate_directory(file_all, protein, source):
         shutil.copy(f'{source}/_Xqmin_tmp.in', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_11_run_tleap.sh', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_21_run-mm_meta.sh', f'./trajectories/model_{count}/')
-        #shutil.copy(f'{source}/_31_prep.sh', f'./trajectories/model_{count}/')
-        shutil.copy(f'{source}/NEW_PDB.pdb', f'./trajectories/model_{count}/')
-        # convert traj_position_ligand_{count}.pdbqt to pdb
-        subprocess.call(f'/home/petrahrozkova/MGLTools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py -f ./trajectories/model_{count}/position_ligand_{count}.pdbqt -o ./trajectories/model_{count}/ligand.pdb',
-                        shell = True)
-        #subprocess.call(
-        #    f'/home/petrahrozkova/MGLTools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py -f ./trajectories/model_{count}/position_ligand_{count}.pdbqt -o ./trajectories/model_{count}/ligand_for_complex.pdb',
-        #    shell=True)
+        shutil.copy(f'{source}/{protein}', f'./trajectories/model_{count}/')
+        shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
+        try:
+            subprocess.run(f'rm ./trajectories/model_{count}/emin*', shell = True)
+        except:
+            pass
+        try:
+            subprocess.run(f'rm ./trajectories/model_{count}/complex.inpcrd', shell = True)
+        except:
+            pass
+        try:
+            subprocess.run(f'rm ./trajectories/model_{count}/complex.prmtop', shell = True)
+        except:
+            pass
+    # convert traj_position_ligand_{count}.pdbqt to pdb -> singularity
+        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+
+        Client.execute(['/opt/mgltools-1.5.6/bin/pythonsh',
+                            '/opt/mgltools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py',
+                            '-f',os.getcwd()+'/trajectories/model_'+str(count)+'/position_ligand_*.pdbqt',
+                            '-o', os.getcwd()+'/trajectories/model_'+str(count)+'/ligand.pdb'])
+
         subprocess.call(f'sed -i \'s/<0> d/TIP d/g\' ./trajectories/model_{count}/ligand.pdb', shell = True) #ligand_for_complex.pdb
 
-        subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > \"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
+        subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > '
+                        f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
 
         # spojit 'hloupe" ligand, protein do complex.pdb
-        subprocess.call(
-            f'cat ./trajectories/model_{count}/NEW_PDB.pdb > ./trajectories/model_{count}/complex.pdb | echo TER >> ./trajectories/model_{count}/complex.pdb',
+        subprocess.call( #remove last line in file with END. IMPORTANT!
+            f'head -n -1 ./trajectories/model_{count}/{protein} > ./trajectories/model_{count}/complex.pdb | '
+            f'echo TER >> ./trajectories/model_{count}/complex.pdb',
             shell=True)
-        subprocess.call(f' cat ./trajectories/model_{count}/ligand_for_complex.pdb >> ./trajectories/model_{count}/complex.pdb |  echo TER >> ./trajectories/model_{count}/complex.pdb',
+        subprocess.call(f'cat ./trajectories/model_{count}/ligand_for_complex.pdb'
+                        f' >> ./trajectories/model_{count}/complex.pdb ',
+                        #f'| echo TER >> ./trajectories/model_{count}/complex.pdb',
             shell=True)
-        subprocess.call(f' echo END >> ./trajectories/model_{count}/complex.pdb',
+        subprocess.call(f'echo END >> ./trajectories/model_{count}/complex.pdb',
             shell=True)
-
-        # vytvorit ligand.prepi
-        # 	antechamber -i $traj -fi pdb -o ${traj%.*}.prepi -fo prepi
-        # parmchk2 -f prepi -i ligand.prepi -o frcmod_lig2
-
 
 
 def main():
     args = get_argument()
     file_string = make_string_from_file(args.file_path)
     file_all = parse_structures(file_string)
+    check_files(args.directory_source, args.protein)
     make_separate_directory(file_all, args.protein, args.directory_source)
 
 

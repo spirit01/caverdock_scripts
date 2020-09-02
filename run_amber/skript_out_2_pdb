@@ -4,7 +4,7 @@ cd "$i";
 echo $i;
 ambpdb -p complex.prmtop < emin1.rst > emin1.pdb;
 ambpdb -p complex.prmtop < emin2.rst > emin2.pdb;
-ambpdb -p complex.prmtop < emin2.rst > emin3.pdb;
+ambpdb -p complex.prmtop < emin3.rst > emin3.pdb;
 ambpdb -p complex.prmtop < emin4.rst > emin4.pdb;
 ambpdb -p complex.prmtop < emin5.rst > emin5.pdb;
 cd ../;

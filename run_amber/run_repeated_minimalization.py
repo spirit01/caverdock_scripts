@@ -41,18 +41,20 @@ def make_complex(dir, order):
     for model_long in models:
         if "model" in model_long:
             #write emin5.pdb do complex.pdb
+            print(model_long)
+            os.mkdir(f'./trajectories_r_{order}/{model_long}/')
             with open(f'{dir}{model_long}/emin5.pdb') as file_emin:
                 #model = correct_name(model_long)
-                with open(f'./trajectories_r_{order}/{model_long}_r_{order}/complex.pdb', 'w') as file_complex:
+                with open(f'./trajectories_r_{order}/{model_long}/complex.pdb', 'w') as file_complex:
                     for line in file_emin:
                         if line.startswith('ATOM'):
                             file_complex.write(line)
                         if line.startswith(f'TER'):
                             file_complex.write("TER \n")
                             break
-            with open(f'{dir}{model}/ligand.pdb') as file_emin:
+            with open(f'{dir}{model_long}/ligand.pdb') as file_emin:
                 #model = correct_name(model_long)
-                with open(f'./trajectories_r_{order}/{model_long}_r_{order}/complex.pdb', 'a') as file_complex:
+                with open(f'./trajectories_r_{order}/{model_long}/complex.pdb', 'a') as file_complex:
                     for line in file_emin:
                         if line.startswith('ATOM'):
                             file_complex.write(line)
@@ -60,6 +62,13 @@ def make_complex(dir, order):
                             file_complex.write("TER \n")
                             break
                     file_complex.write("END \n")
+        # nakopiruje navic potrebna data
+            shutil.copy(f'/home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p3/32/_Xqmin_tmp.in', f'./trajectories_r_{order}/{model_long}/')
+            shutil.copy(f'/home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p3/32/_11_run_tleap.sh', f'./trajectories_r_{order}/{model_long}/')
+            shutil.copy(f'/home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p3/32/_21_run-mm_meta.sh', f'./trajectories_r_{order}/{model_long}/')
+            #shutil.copy(f'{source}/_31_prep.sh', f'./trajectories/model_{count}/')
+            shutil.copy(f'/home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p3/32/NEW_PDB.pdb', f'./trajectories_r_{order}/{model_long}/')
+            shutil.copy(f'/home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p3/32/ligand.prepi', f'./trajectories_r_{order}/{model_long}/')
 #it gives ugly name of foler and file, too long
 #def correct_name(model):
 #    print(model)
