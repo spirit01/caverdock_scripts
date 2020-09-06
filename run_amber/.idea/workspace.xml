@@ -2,16 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="563436c6-1b55-4f8b-9e70-49c84e5c6c76" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/make_file_for_grap.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README" beforeDir="false" afterPath="$PROJECT_DIR$/README" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/collect_results.py" beforeDir="false" afterPath="$PROJECT_DIR$/collect_results.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/extract_ligand_from_complex" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/make_graph_repeated_trajectories.py" beforeDir="false" afterPath="$PROJECT_DIR$/make_graph_repeated_trajectories.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/parse_structures_from_caverdock.py" beforeDir="false" afterPath="$PROJECT_DIR$/parse_structures_from_caverdock.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_amber.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_amber.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_repeated_minimalization.py" beforeDir="false" afterPath="$PROJECT_DIR$/run_repeated_minimalization.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/skript_out_2_pdb" beforeDir="false" afterPath="$PROJECT_DIR$/skript_out_2_pdb" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/framework_CD_amber.py" beforeDir="false" afterPath="$PROJECT_DIR$/framework_CD_amber.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,7 +40,7 @@
     <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../test_amber_plus_caverdock" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../ensemble-fit_docker_version/SAXS" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -152,7 +144,7 @@
       <workItem from="1597759127410" duration="647000" />
       <workItem from="1598209882609" duration="59000" />
       <workItem from="1598255279006" duration="1483000" />
-      <workItem from="1598451289343" duration="9250000" />
+      <workItem from="1598451289343" duration="48478000" />
     </task>
     <servers />
   </component>
@@ -160,9 +152,10 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1223" y="311" width="424" height="491" key="FileChooserDialogImpl" timestamp="1597388223260">
-      <screen x="0" y="27" width="1920" height="1053" />
+    <state x="3143" y="291" width="424" height="491" key="FileChooserDialogImpl" timestamp="1599060200238">
+      <screen x="1920" y="0" width="1920" height="1080" />
     </state>
     <state x="1223" y="311" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1053@0.27.1920.1053" timestamp="1597388223260" />
+    <state x="3143" y="291" key="FileChooserDialogImpl/1920.0.1920.1080/3840.0.3840.2160/0.27.1920.1053@1920.0.1920.1080" timestamp="1599060200238" />
   </component>
 </project>
