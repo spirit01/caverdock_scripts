@@ -2,13 +2,13 @@
 
 # -*- coding: utf-8 -*-
 import os
-import re
 import sys
 from argparse import ArgumentParser
 from spython.main import Client
 from operator import itemgetter
 from pathlib import Path
-import glob
+import subprocess
+
 
 
 # IN: protein, ligand, tunel OR pdbqt file from CD, ligand, tunel
@@ -46,7 +46,7 @@ def run_caverdock():
     #return ub pdbqt a lb pdbqt
     pass
 
-def run_amber():
+def run_amber(protein):
     # IN: struktura proteinu, ligand
     # OUT: nova struktura proteinu po minimalizaci
 
@@ -55,16 +55,13 @@ def run_amber():
     pass
 
 def run_cd_energy_profile(tunnel, protein):
-    Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
-    print('cd-energyprofile',
-          '-d', os.getcwd()+ '/' + tunnel.name, '-t', str(protein),
-          '-s', 0, '> ' 'energy.dat')
-
     if 'pdbqt' in protein.name:
-        Client.execute(['cd-energyprofile','-d', os.getcwd() + '/' + tunnel.name,
-                        '-t', protein.name, '-s', str('0'), '>' 'energy.dat'])
-        print('yes')
+        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+        Client.execute(['ls'])
+        file = Client.execute(['cd-energyprofile','-d', os.getcwd() + '/' + tunnel.name, '-t', protein.name, '-s', str('0')])
 
+        with open(f'{os.getcwd()}/energy.dat', 'w+') as file_energy_dat:
+            file_energy_dat.write(file)
     else:
         print('Run CD first.')
 
@@ -73,6 +70,8 @@ def run_cd_energy_profile(tunnel, protein):
     else:
         print('energy.dat is not exist. Exit framework.')
         sys.exit(1)
+
+
 
 def find_maximum_CD_curve(result_cd, ub_lb):
     # IN: pdbqt soubor
@@ -89,17 +88,22 @@ def find_maximum_CD_curve(result_cd, ub_lb):
         file_energy.readline()
         for line in file_energy:
             if ub_lb == 'lb':
-                energy = line.split(' ')[5]
+                energy = float(line.split(' ')[5].strip())
             if ub_lb == 'ub':
-                energy = line.split(' ')[3]
+                energy = int(line.split(' ')[3])
             num_str = line.split(' ')[1]
             num_str_energy.append((num_str, energy))
 
     max_value = max(num_str_energy,key=itemgetter(1))[1]
-    print(max_value)
 
     return max_value
 
+def find_strce_for_amber(strce_and_max):
+
+    trajectories = os.listid('trajectories')
+    for file in trajectories:
+        if strce_and_max[0] in file:
+            return file
 
 def check_input_data():
     pass
@@ -118,7 +122,10 @@ def main():
     run_cd_energy_profile(args.tunnel, args.protein)
     find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
     max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-    print(max_value_and_strctr)
+
+    strcre_for_amber = find_strce_for_amber(max_value_and_strctr)
+    new_strcture = run_amber(max_value_and_strctr)
+
 
 
     #os.chdir(path)
