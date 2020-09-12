@@ -8,6 +8,8 @@ from spython.main import Client
 from operator import itemgetter
 from pathlib import Path
 import subprocess
+import operator
+
 
 
 
@@ -82,7 +84,6 @@ def find_maximum_CD_curve(result_cd, ub_lb):
     # nejprve testova na hotově pdbqt křivce. Buď lze dát hotovou křivku
     # nebo si to nechat spošítat znovu
 
-
     num_str_energy = []
     with open(f'energy.dat') as file_energy:
         file_energy.readline()
@@ -90,21 +91,19 @@ def find_maximum_CD_curve(result_cd, ub_lb):
             if ub_lb == 'lb':
                 energy = float(line.split(' ')[5].strip())
             if ub_lb == 'ub':
-                energy = int(line.split(' ')[3])
+                energy = float(line.split(' ')[3])
             num_str = line.split(' ')[1]
             num_str_energy.append((num_str, energy))
-
-    max_value = max(num_str_energy,key=itemgetter(1))[1]
+    num_str_energy.sort(key = operator.itemgetter(1), reverse = True)
+    max_value = num_str_energy[0]
 
     return max_value
 
 def find_strce_for_amber(strce_and_max):
-
-    trajectories = os.listid('trajectories')
+    trajectories = os.listdir('./trajectories')
     for file in trajectories:
-        if strce_and_max[0] in file:
-            return file
-
+        if str(strce_and_max[0]) in file:
+            print(file)
 def check_input_data():
     pass
 
@@ -122,7 +121,6 @@ def main():
     run_cd_energy_profile(args.tunnel, args.protein)
     find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
     max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-
     strcre_for_amber = find_strce_for_amber(max_value_and_strctr)
     new_strcture = run_amber(max_value_and_strctr)
 
