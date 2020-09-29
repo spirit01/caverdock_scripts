@@ -9,9 +9,9 @@ from operator import itemgetter
 from pathlib import Path
 import subprocess
 import operator
+import parse_structures_from_caverdock as parse_cd
 
-
-
+LIGAND = 'BEO'
 
 # IN: protein, ligand, tunel OR pdbqt file from CD, ligand, tunel
 # OUT: new pdbqt file with better energy of trajectory OR step of trajectory with bottleneck
@@ -54,7 +54,18 @@ def run_amber(protein):
 
     # mohlo by to být externě v dalším souboru
     # return optimalizovaná struktura z maxima
-    pass
+
+    parse_cd.main()
+
+    try:
+        subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
+                                   f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                                   f'-x mdcrd -r emin1.rst')
+    except:
+        print('Cannot run amber.')
+        sys.exit(1)
+
+    return 0
 
 def run_cd_energy_profile(tunnel, protein):
     if 'pdbqt' in protein.name:
@@ -100,10 +111,23 @@ def find_maximum_CD_curve(result_cd, ub_lb):
     return max_value
 
 def find_strce_for_amber(strce_and_max):
-    trajectories = os.listdir('./trajectories')
+    trajectories = os.listdir('../trajectories')
     for file in trajectories:
         if str(strce_and_max[0]) in file:
-            print(file)
+
+            return (file, strce_and_max[1])
+
+    return 0
+
+def remove_ligand_from_emin(old_strce):
+    #  ted defaultne vypocitany emin5.pdb
+
+    with open('emin5.pdb') as oldfile, open('new_emind5.pdb', 'w') as newfile:
+        for line in oldfile:
+            if not LIGAND in line:
+                newfile.write(line)
+
+
 def check_input_data():
     pass
 
@@ -121,8 +145,11 @@ def main():
     run_cd_energy_profile(args.tunnel, args.protein)
     find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
     max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-    strcre_for_amber = find_strce_for_amber(max_value_and_strctr)
-    new_strcture = run_amber(max_value_and_strctr)
+    strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
+    print(strcre_for_amber_energy)
+    new_strctre = 'emin5.pdb' #run_amber(strcre_for_amber_energy)
+
+    correct_strcre = remove_ligand_from_emin(new_strctre)
 
 
 
