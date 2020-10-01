@@ -10,6 +10,7 @@ from pathlib import Path
 import subprocess
 import operator
 import parse_structures_from_caverdock as parse_cd
+import shutil
 
 LIGAND = 'BEO'
 CPU = 2
@@ -21,7 +22,10 @@ CPU = 2
 def get_argument():
     parser = ArgumentParser()
 
-    parser.add_argument("-protein", help="protein.pdb or result_cd.pdbqt file ", type=Path)
+    parser.add_argument("-traj", help="trajectory from caverdock in format pdbqt ", type=Path)
+
+    parser.add_argument("-protein", help="structure of protein in format pdb", type=Path)
+
 
     parser.add_argument("-CD_lb_ub", help="choose lb or ub ", choices=['lb', 'ub'],
                         dest= 'CD_lb_ub')
@@ -54,23 +58,25 @@ def run_caverdock(protein, ligand, tunnel):
     #return ub pdbqt a lb pdbqt
     pass
 
+#protein is pdb file WITHOUT ligand
 def run_amber(protein):
     # IN: struktura proteinu, ligand
     # OUT: nova struktura proteinu po minimalizaci
 
     # mohlo by to být externě v dalším souboru
-    # return optimalizovaná struktura z maxima
+    # return optimalizovaná struktura z maxima -> emin5.pdb
     # directory_source, file_path to trajectories, protein
-    protein_pdb = f'./trajectories/{protein[0]/}'
+    #protein_pdb = f'./trajectories/{protein[0]/}'
     parse_cd.main('.', 'test-lb.pdbqt', protein)
-
+    # run _11_run_tleap.sh
+    # tun _21_run-mm_meta.sh
     try:
         subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
                                    f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                                    f'-x mdcrd -r emin1.rst')
     except:
         print('Cannot run amber.')
-        sys.exit(1)
+        #sys.exit(1)
 
     return 0
 
@@ -125,20 +131,15 @@ def find_strce_for_amber(strce_and_max):
 
     return 0
 
-def remove_ligand_from_emin(old_strce):
+def remove_ligand_from_emin(protein):
     #  ted defaultne vypocitany emin5.pdb
-
-    with open('emin5.pdb') as oldfile, open('protein.pdb', 'w') as newfile:
+    with open(protein) as oldfile, open('protein.pdb', 'w') as newfile:
         for line in oldfile:
             if not LIGAND in line:
                 newfile.write(line)
 
-
 def check_input_data():
     pass
-
-
-
 
 def main():
     args = get_argument()
@@ -147,26 +148,15 @@ def main():
     rslt_dir = args.results_dir
     if rslt_dir == '.':
         rslt_dir = os.getcwd()
-    if 'pdbqt' in args.protein:
-        run_cd_energy_profile(args.tunnel, args.protein)
-        #find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-        max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-        strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
-        new_strctre = run_amber(f'./trajectories/{strcre_for_amber_energy}/protein.pdb')
+    remove_ligand_from_emin(args.protein) # rename file to protein.pdb and remove ligand if it is necessary
 
+    run_cd_energy_profile(args.tunnel, args.traj)
+    max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
+    strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
+    run_amber('protein.pdb') # create new emin5.pdb with better structure
 
-if 'pdb' in args.protein:
-        # run CD
-        #run amber
+    shutil.move(f'./trajectories/{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
 
-        new_strctre = run_amber(strcre_for_amber_energy)
-
-    correct_strcre = remove_ligand_from_emin(new_strctre)
-    #result_cd = run_caverdock(correct_strcre)
-
-
-
-    #os.chdir(path)
 
 
 
