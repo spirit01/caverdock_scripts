@@ -51,9 +51,10 @@ def run_caverdock(protein, ligand, tunnel):
 
     # mohlo by to být externě v dalším souboru
     Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+    Client.execute(['mpirun', '-np', str(CPU), 'caverdock',  '--config', 'caverdock.conf', '--out', 'result_CD'])
+
     Client.execute(['cd-prepareconf.py', '-r', protein, '-l',  ligand, '-t', tunnel, '>', 'caverdock.conf'])
 
-    Client.execute(['mpirun', '-np', str(CPU), 'caverdock',  '--config', 'caverdock.conf', '--out', 'result_CD'])
 
     #return ub pdbqt a lb pdbqt
     pass
@@ -80,16 +81,13 @@ def run_amber(protein):
 
     return 0
 
-def run_cd_energy_profile(tunnel, protein):
-    if 'pdbqt' in protein.name:
-        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
-        Client.execute(['ls'])
-        file = Client.execute(['cd-energyprofile','-d', os.getcwd() + '/' + tunnel.name, '-t', protein.name, '-s', str('0')])
+def run_cd_energy_profile(tunnel, traj):
+    Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+    Client.execute(['ls'])
+    file = Client.execute(['cd-energyprofile','-d', os.getcwd() + '/' + tunnel.name, '-t', traj.name, '-s', str('0')])
 
-        with open(f'{os.getcwd()}/energy.dat', 'w+') as file_energy_dat:
-            file_energy_dat.write(file)
-    else:
-        print('Run CD first.')
+    with open(f'{os.getcwd()}/energy.dat', 'w+') as file_energy_dat:
+        file_energy_dat.write(file)
 
     if os.path.exists('energy.dat'):
         return 0
@@ -148,6 +146,12 @@ def main():
     rslt_dir = args.results_dir
     if rslt_dir == '.':
         rslt_dir = os.getcwd()
+
+    if not args.traj:
+        run_caverdock(args.protein, args.ligand, args.tunnel)
+        args.traj = f'result_CD-{args.CD_lb_ub}pdbqt'
+        print('Run CD and create new pdbqt')
+
     remove_ligand_from_emin(args.protein) # rename file to protein.pdb and remove ligand if it is necessary
 
     run_cd_energy_profile(args.tunnel, args.traj)

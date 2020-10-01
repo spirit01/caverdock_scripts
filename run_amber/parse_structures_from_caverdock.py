@@ -86,7 +86,7 @@ def make_separate_directory(file_all, protein, source):
         shutil.copy(f'{source}/{protein}', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
         try:
-            subprocess.run(f'rm ./trajectories/model_{count}/emin*', shell = True)
+            subprocess.run(f'rm ./trajectories/model_{count}/emin2*', shell = True)
         except:
             pass
         try:
