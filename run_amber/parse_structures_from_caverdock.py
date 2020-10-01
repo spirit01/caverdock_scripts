@@ -14,13 +14,13 @@ from pathlib import Path
 from spython.main import Client
 from Bio.PDB import *
 
-
+LIGAND = 'BEO'
 def get_argument():
     parser = ArgumentParser()
 
-    parser.add_argument("-file_path", type=Path)
+    parser.add_argument("-file_path", type=Path, help = 'pdbqt file from CaverDock')
 
-    parser.add_argument("-protein", type=Path)
+    parser.add_argument("-protein", type=Path, help = 'pdb file with structure of protein')
 
     parser.add_argument("-source", help="choose directory to load files",
                         metavar="DIR", dest="directory_source", required=True)
@@ -67,7 +67,7 @@ def make_separate_directory(file_all, protein, source):
     #shutil.rmtree('trajectories')
     isdir = os.path.isdir('trajectories')
     if isdir == False:
-        print('not exist')
+        print('Trajectories do not exist')
         os.mkdir('trajectories')
     else:
         print('exist')
@@ -123,13 +123,13 @@ def make_separate_directory(file_all, protein, source):
             shell=True)
 
 
-def main():
-    args = get_argument()
-    file_string = make_string_from_file(args.file_path)
+def main(directory_source, pdbqt_traj, protein):
+    file_string = make_string_from_file(pdbqt_traj)
     file_all = parse_structures(file_string)
-    check_files(args.directory_source, args.protein)
-    make_separate_directory(file_all, args.protein, args.directory_source)
+    check_files(directory_source, protein)
+    make_separate_directory(file_all, protein, directory_source)
 
 
 if __name__ == '__main__':
-    main()
+    args = get_argument()
+    main(args.directory_source, args.file_path, args.protein)

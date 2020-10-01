@@ -12,6 +12,7 @@ import operator
 import parse_structures_from_caverdock as parse_cd
 
 LIGAND = 'BEO'
+CPU = 2
 
 # IN: protein, ligand, tunel OR pdbqt file from CD, ligand, tunel
 # OUT: new pdbqt file with better energy of trajectory OR step of trajectory with bottleneck
@@ -40,11 +41,16 @@ def choose_step_from_pdbqt():
     # OUTPUT: složka s strukturou, která má v CD nejvyšší energii
     pass
 
-def run_caverdock():
+def run_caverdock(protein, ligand, tunnel):
     # IN: protein, ligand, tunel
     # OUT: pdbqt lb a ub
 
     # mohlo by to být externě v dalším souboru
+    Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+    Client.execute(['cd-prepareconf.py', '-r', protein, '-l',  ligand, '-t', tunnel, '>', 'caverdock.conf'])
+
+    Client.execute(['mpirun', '-np', str(CPU), 'caverdock',  '--config', 'caverdock.conf', '--out', 'result_CD'])
+
     #return ub pdbqt a lb pdbqt
     pass
 
@@ -54,8 +60,9 @@ def run_amber(protein):
 
     # mohlo by to být externě v dalším souboru
     # return optimalizovaná struktura z maxima
-
-    parse_cd.main()
+    # directory_source, file_path to trajectories, protein
+    protein_pdb = f'./trajectories/{protein[0]/}'
+    parse_cd.main('.', 'test-lb.pdbqt', protein)
 
     try:
         subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
@@ -81,7 +88,7 @@ def run_cd_energy_profile(tunnel, protein):
     if os.path.exists('energy.dat'):
         return 0
     else:
-        print('energy.dat is not exist. Exit framework.')
+        print('energy.dat does not exist. Exit framework.')
         sys.exit(1)
 
 
@@ -114,7 +121,6 @@ def find_strce_for_amber(strce_and_max):
     trajectories = os.listdir('../trajectories')
     for file in trajectories:
         if str(strce_and_max[0]) in file:
-
             return (file, strce_and_max[1])
 
     return 0
@@ -122,7 +128,7 @@ def find_strce_for_amber(strce_and_max):
 def remove_ligand_from_emin(old_strce):
     #  ted defaultne vypocitany emin5.pdb
 
-    with open('emin5.pdb') as oldfile, open('new_emind5.pdb', 'w') as newfile:
+    with open('emin5.pdb') as oldfile, open('protein.pdb', 'w') as newfile:
         for line in oldfile:
             if not LIGAND in line:
                 newfile.write(line)
@@ -141,15 +147,22 @@ def main():
     rslt_dir = args.results_dir
     if rslt_dir == '.':
         rslt_dir = os.getcwd()
+    if 'pdbqt' in args.protein:
+        run_cd_energy_profile(args.tunnel, args.protein)
+        #find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
+        max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
+        strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
+        new_strctre = run_amber(f'./trajectories/{strcre_for_amber_energy}/protein.pdb')
 
-    run_cd_energy_profile(args.tunnel, args.protein)
-    find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-    max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-    strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
-    print(strcre_for_amber_energy)
-    new_strctre = 'emin5.pdb' #run_amber(strcre_for_amber_energy)
+
+if 'pdb' in args.protein:
+        # run CD
+        #run amber
+
+        new_strctre = run_amber(strcre_for_amber_energy)
 
     correct_strcre = remove_ligand_from_emin(new_strctre)
+    #result_cd = run_caverdock(correct_strcre)
 
 
 
