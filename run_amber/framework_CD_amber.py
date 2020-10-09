@@ -37,51 +37,55 @@ class SpecialFormatter(logging.Formatter):
 def get_argument():
     parser = ArgumentParser()
 
-    parser.add_argument("-traj", help="trajectory from caverdock in format pdbqt ", type=Path)
+    parser.add_argument("-traj", help="Trajectory from caverdock in format pdbqt.", type=Path)
 
-    parser.add_argument("-protein", help="structure of protein in format pdb", type=Path)
+    parser.add_argument("-protein", help="Structure of protein in format pdb.", type=Path)
 
 
-    parser.add_argument("-CD_lb_ub", help="choose lb or ub ", choices=['lb', 'ub'],
+    parser.add_argument("-CD_lb_ub", help="Choose lb or ub. ", choices=['lb', 'ub'],
                         dest= 'CD_lb_ub')
 
-    parser.add_argument("-ligand", type=Path, required=True)
+    parser.add_argument("-ligand", help = 'Ligands name in pdbqt format.', type=Path, required=True)
 
-    parser.add_argument("-tunnel", type=Path, required=True)
+    parser.add_argument("-tunnel", help = 'Tunnel name in dsd format.', type=Path, required=True)
 
-    parser.add_argument("-results_dir", help="choose directory to save files",
+    parser.add_argument("-config", help = 'Location config.ini file.', type=Path, required=True)
+
+    parser.add_argument("-results_dir", help="Choose directory to save files.",
                         metavar="DIR", dest="results_dir")
 
     return parser.parse_args()
 
-def run_caverdock(protein, ligand, tunnel):
+def run_caverdock(protein, ligand, tunnel, configfile):
     # IN: protein, ligand, tunel
     # OUT: pdbqt file with lb and ub
 
     # mohlo by to být externě v dalším souboru
     try:
         Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
-        logging.INFO(f'Singularity for caverdock: /home/petrahrozkova/Stažené/caverdock_1.1.sif')
+        logging.info(f'Singularity for caverdock: /home/petrahrozkova/Stažené/caverdock_1.1.sif \n')
 
         Client.execute(['mpirun', '-np', str(CPU), 'caverdock',  '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
-        logging.INFO(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
 
         Client.execute(['cd-prepareconf.py', '-r', protein, '-l',  ligand, '-t', tunnel, '>', 'caverdock.conf'])
-        logging.INFO(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
+        logging.info(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
 
     except:
-        logging.ERROR(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
-        logging.ERROR(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
-        logging.ERROR(f'Cannot run Caverdock or cd-preparconf.')
+        print(f"cpu {configfile['RESULT_CD']['name']}")
+        logging.error(f"mpirun -np {configfile['CPU']['cpu']} caverdock  --config caverdock.conf --out {configfile['RESULT_CD']['name']}")
+        logging.error(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
+        logging.error(f'Cannot run Caverdock or cd-preparconf.')
 
         print('Cannot run Caverdock or cd-preparconf.')
         sys.exit(1)
 
-def check_config_file():
-    if os.path.exists(f'{os.getcwd()}/config.ini'):
+def check_config_file(config):
+    print(f'{config}')
+    if os.path.exists(f'{config}'):
         return True
     else:
-        print('Config file does not exist!')
+        print('Config.ini file does not exist!')
     return False
 
 #protein is pdb file WITHOUT ligand
@@ -93,19 +97,19 @@ def run_amber(protein, CD_lb_ub):
     # directory_source, file_path to trajectories, protein
     #protein_pdb = f'./trajectories/{protein[0]/}'
     print('Check whether input protein is without ligand.')
-    parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
-    logging.INFO(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
+   # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
+    logging.info(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
     # run _11_run_tleap.sh
     # tun _21_run-mm_meta.sh
     try:
         subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
                                    f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                                    f'-x mdcrd -r emin1.rst')
-        logging.INFO(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
+        logging.info(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
                      f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                      f'-x mdcrd -r emin1.rst')
     except:
-        logging.ERROR('Cannot run amber.')
+        logging.error('Cannot run amber.')
         print('Cannot run amber.')
         #sys.exit(1)
 
@@ -173,10 +177,12 @@ def main():
     args = get_argument()
     print(f'Current working directory: {os.getcwd()}')
     print(f'Check whether protein is WITHOUT ligand.')
-    config = configparser.ConfigParser()
-    config.read(f'{os.getcwd()}/config.ini')
-    if not check_config_file():
+
+    if not check_config_file(args.config):
         sys.exit(1)
+    configfile = configparser.ConfigParser()
+    configfile.read(f'{args.config}')
+
 
     hdlr = logging.FileHandler(
         f'framework_{strftime("%Y-%m-%d__%H-%M-%S", localtime())}.log')
@@ -193,7 +199,7 @@ def main():
         rslt_dir = os.getcwd()
 
     if not args.traj:
-        run_caverdock(args.protein, args.ligand, args.tunnel)
+        run_caverdock(args.protein, args.ligand, args.tunnel, configfile)
         logging.info(f'#File from CaverDock: result_CD-{args.CD_lb_ub}.pdbq \n')
         args.traj = f'result_CD-{args.CD_lb_ub}.pdbqt'
         print('Run CD and create new traj pdbqt')
