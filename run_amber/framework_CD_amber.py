@@ -54,34 +54,69 @@ def get_argument():
     parser.add_argument("-results_dir", help="Choose directory to save files.",
                         metavar="DIR", dest="results_dir")
 
+    parser.add_argument("-v", "--verbose", help="increase output verbosity",
+                       dest="verbose", action = "store_true")
+
     return parser.parse_args()
 
-def run_caverdock(protein, ligand, tunnel, configfile):
+def run_caverdock(ligand, tunnel, configfile, verbose):
     # IN: protein, ligand, tunel
     # OUT: pdbqt file with lb and ub
 
     # mohlo by to být externě v dalším souboru
+
+    #if configfile["SINGULARITY"]["value"] == 1:
+    singularity = Client.load(str(configfile['SINGULARITY']['singularity']))
+    logging.info(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
+    logging.info(f'Message from singularity: \n {singularity}')
+    if verbose:
+        print(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
+        print(f'Message from singularity: \n {singularity} \n')
+
+    prepare_conf = ''
     try:
-        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
-        logging.info(f'Singularity for caverdock: /home/petrahrozkova/Stažené/caverdock_1.1.sif \n')
+        prepare_conf = Client.execute(['cd-prepareconf', '-r', 'protein.pdbqt', '-l',
+                    str(ligand), '-t', str(tunnel)])
 
-        Client.execute(['mpirun', '-np', str(CPU), 'caverdock',  '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
-        logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+        logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
+        if verbose:
+            print(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            print(f'Message from cd-prepareconf: \n {prepare_conf}')
 
-        Client.execute(['cd-prepareconf.py', '-r', protein, '-l',  ligand, '-t', tunnel, '>', 'caverdock.conf'])
-        logging.info(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
-
+        with open('caverdock.conf', 'w+') as file_conf:
+            file_conf.write(prepare_conf)
     except:
-        print(f"cpu {configfile['RESULT_CD']['name']}")
-        logging.error(f"mpirun -np {configfile['CPU']['cpu']} caverdock  --config caverdock.conf --out {configfile['RESULT_CD']['name']}")
-        logging.error(f'cd-prepareconf.py -r {protein} -l  {ligand} -t {tunnel} > caverdock.conf')
-        logging.error(f'Cannot run Caverdock or cd-preparconf.')
-
-        print('Cannot run Caverdock or cd-preparconf.')
+        logging.error(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+        logging.error(f'Message from cd-prepareconf: \n {prepare_conf}')
+        if verbose:
+            print(f'ERROR: cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            print(f'ERROR: Message from cd-prepareconf: \n {prepare_conf}')
         sys.exit(1)
 
-def check_config_file(config):
-    print(f'{config}')
+
+    try:
+        mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
+                    '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
+        logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        logging.info(f'Message from mpirun: \n {mpirun}')
+        if verbose:
+            print(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+            print(f'Message from mpirun: \n {mpirun}')
+
+
+
+    except:
+        logging.error(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        logging.error(f'Message from mpirun: \n {mpirun}')
+        if verbose:
+            print(f'ERROR: mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+            print(f'ERROR: Message from mpirun: \n {mpirun}')
+        sys.exit(1)
+
+def check_config_file(config, verbose):
+    if verbose:
+        print(f'{config}')
     if os.path.exists(f'{config}'):
         return True
     else:
@@ -89,7 +124,7 @@ def check_config_file(config):
     return False
 
 #protein is pdb file WITHOUT ligand
-def run_amber(protein, CD_lb_ub):
+def run_amber(protein, CD_lb_ub, verbose, configfile):
     # IN: struktura proteinu, ligand
     # OUT: nova struktura proteinu po minimalizaci
 
@@ -99,26 +134,60 @@ def run_amber(protein, CD_lb_ub):
     print('Check whether input protein is without ligand.')
    # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
     logging.info(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
+    if verbose:
+        print(f'{(configfile["SINGULARITY"]["singularity"])} -O -i emin1.in '
+              f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+              f'-x mdcrd -r emin1.rst')
     # run _11_run_tleap.sh
     # tun _21_run-mm_meta.sh
+
+
     try:
-        subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
-                                   f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-                                   f'-x mdcrd -r emin1.rst')
-        logging.info(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/sander -O -i emin1.in '
+        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
+                        f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-x mdcrd -r emin1.rst', shell = True)
+        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
                      f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                      f'-x mdcrd -r emin1.rst')
+
+        #subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/ambpdb -p complex.prmtop'
+        #                f' -c emin1.rst > emin1.pdb', shell = True)
+        #subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/ambpdb -p complex.prmtop'
+        #                f' -c emin2.rst > emin3.pdb', shell = True)
+        #subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/ambpdb -p complex.prmtop'
+        #                f' -c emin3.rst > emin3.pdb', shell = True)
+        #subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/ambpdb -p complex.prmtop'
+        #                f' -c emin4.rst > emin4.pdb', shell = True)
+        #subprocess.call(f'/home/petrahrozkova/Stažené/AmberTools20/amber20/bin/ambpdb -p complex.prmtop'
+        #                f' -c emin5.rst > emin5.pdb', shell = True)
+
+        if verbose:
+            print(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
+                  f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                  f'-x mdcrd -r emin1.rst')
     except:
         logging.error('Cannot run amber.')
         print('Cannot run amber.')
-        #sys.exit(1)
+        sys.exit(1)
 
     return 0
 
-def run_cd_energy_profile(tunnel, traj):
-    Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
-    Client.execute(['ls'])
-    file = Client.execute(['cd-energyprofile','-d', os.getcwd() + '/' + tunnel.name, '-t', traj.name, '-s', str('0')])
+def run_cd_energy_profile(tunnel, traj, configfile, verbose):
+    try:
+        Client.load(str(configfile['SINGULARITY']['singularity']))
+        if verbose:
+            print(['cd-energyprofile','-d', os.getcwd() + '/' + str(tunnel),
+                   '-t', str(traj), '-s', str(configfile['CPU']['cpu'])])
+        file = Client.execute(['cd-energyprofile','-d',
+                               os.getcwd() + '/' + str(tunnel), '-t', str(traj),
+                               '-s', str(configfile['CPU']['cpu'])])
+        logging.info(f'Message from cd-energyprofieL: \n {file}')
+
+    except:
+        if verbose:
+            print('cd-energyprofile returncode is not 0. Check logfile.')
+        logging.error(f'cd-energyprofile returncode is not 0.')
+        sys.exit(1)
 
     with open(f'{os.getcwd()}/energy.dat', 'w+') as file_energy_dat:
         file_energy_dat.write(file)
@@ -131,7 +200,7 @@ def run_cd_energy_profile(tunnel, traj):
 
 
 
-def find_maximum_CD_curve(result_cd, ub_lb):
+def find_maximum_CD_curve(result_cd, ub_lb, verbose):
     # IN: pdbqt soubor
     # OUT: konkrétní snapchot proteinu s maximální energií
 
@@ -152,23 +221,48 @@ def find_maximum_CD_curve(result_cd, ub_lb):
             num_str_energy.append((num_str, energy))
     num_str_energy.sort(key = operator.itemgetter(1), reverse = True)
     max_value = num_str_energy[0]
+    logging.info(f'Model:  {num_str_energy[0][0]} and value  {num_str_energy[0][1]}')
+    if verbose:
+        print(f'Model: {num_str_energy[0][0]} and value {num_str_energy[0][1]} ')
 
     return max_value
 
-def find_strce_for_amber(strce_and_max):
-    trajectories = os.listdir('../trajectories')
+def find_strce_for_amber(strce_and_max, verbose, configfile):
+    trajectories = ""
+    try:
+        trajectories = os.listdir(configfile["TRAJECTORIES"]["path_trajectories"])
+    except:
+        logging.error('Dir Trajectories is not in the right place')
+        if verbose:
+            print('Dir trajectories is not in the right place.')
+            sys.exit(1)
     for file in trajectories:
         if str(strce_and_max[0]) in file:
             return (file, strce_and_max[1])
 
     return 0
 
-def remove_ligand_from_emin(protein):
+def remove_ligand_from_emin(protein, verbose, configfile):
     #  ted defaultne vypocitany emin5.pdb
-    with open(protein) as oldfile, open('protein.pdb', 'w') as newfile:
+    with open(protein) as oldfile, open('protein.pdb', 'w+') as newfile:
         for line in oldfile:
             if not LIGAND in line:
-                newfile.write(line)
+                    newfile.write(line)
+    # convert pdb to pdbqt
+    Client.load(str(configfile['SINGULARITY']['singularity']))
+    convert = ''
+    try:
+        convert = Client.execute(['prepare_receptor4', '-r', 'protein.pdb'])
+        logging.info(f'Run prepare_receprot. Message: \n {convert}')
+        if verbose:
+            print(f'Run prepare_receprot. Message: \n {convert}')
+
+    except:
+        logging.error(f'Cannot run prepare_receptrot. Message: \n {convert}')
+        if verbose:
+            print(f'Cannot run prepare_receptrot. Message: \n {convert}')
+
+
 
 def check_input_data():
     pass
@@ -178,7 +272,7 @@ def main():
     print(f'Current working directory: {os.getcwd()}')
     print(f'Check whether protein is WITHOUT ligand.')
 
-    if not check_config_file(args.config):
+    if not check_config_file(args.config, args.verbose):
         sys.exit(1)
     configfile = configparser.ConfigParser()
     configfile.read(f'{args.config}')
@@ -191,27 +285,41 @@ def main():
     logging.root.setLevel(logging.INFO)
     logging.root.setLevel(logging.DEBUG)
     logging.info(f'***Output from framework*** {strftime("%Y-%m-%d__%H-%M-%S", localtime())} \n')
-    logging.info(f'#Protein : {args.protein} \n')
+    logging.info(f'#Protein : {args.protein} -> protein.pdb \n')
     logging.info(f'#Ligand : {args.ligand} \n')
     logging.info(f'#Tunnel: {args.tunnel} \n')
     rslt_dir = args.results_dir
     if rslt_dir == '.':
         rslt_dir = os.getcwd()
 
+    if args.verbose:
+        print("Verbosity turned on")
+        print(f'Output from framework*** {strftime("%Y-%m-%d__%H-%M-%S", localtime())}')
+        print(f'Protein : {args.protein} -> protein.odb')
+        print(f'Ligand : {args.ligand}')
+        print(f'Tunnel: {args.tunnel}')
+        print(f'Dir for result: {rslt_dir}')
+
+    remove_ligand_from_emin(args.protein, args.verbose, configfile) # rename file to protein.pdb and remove ligand if it is necessary
+
     if not args.traj:
-        run_caverdock(args.protein, args.ligand, args.tunnel, configfile)
+        run_caverdock(args.ligand, args.tunnel, configfile, args.verbose)
         logging.info(f'#File from CaverDock: result_CD-{args.CD_lb_ub}.pdbq \n')
         args.traj = f'result_CD-{args.CD_lb_ub}.pdbqt'
-        print('Run CD and create new traj pdbqt')
+        if args.verbose:
+            print(f'Run CD and create new traj pdbqt result_CD-{args.CD_lb_ub}.pdbqt')
 
-    remove_ligand_from_emin(args.protein) # rename file to protein.pdb and remove ligand if it is necessary
 
-    run_cd_energy_profile(args.tunnel, args.traj)
-    max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub)
-    strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr)
-    run_amber('protein.pdb', args.CD_lb_ub) # create new emin5.pdb with better structure
+    run_cd_energy_profile(args.tunnel, args.traj, configfile, args.verbose)
+    max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub, args.verbose)
+    strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr, args.verbose, configfile)
+    run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile) # create new emin5.pdb with better structure
 
-    shutil.move(f'./trajectories/{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
+    subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop '
+                    f'< {configfile["TRAJECTORIES"]["path_trajectories"]}{strcre_for_amber_energy[0]}/emin5.rst '
+                    f'> {configfile["TRAJECTORIES"]["path_trajectories"]}{strcre_for_amber_energy[0]}/emin5.pdb', shell = True)
+
+    shutil.copy(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
 
 
 
