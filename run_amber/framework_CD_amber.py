@@ -65,27 +65,31 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
 
     # mohlo by to být externě v dalším souboru
 
-    #if configfile["SINGULARITY"]["value"] == 1:
-    singularity = Client.load(str(configfile['SINGULARITY']['singularity']))
-    logging.info(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
-    logging.info(f'Message from singularity: \n {singularity}')
-    if verbose:
-        print(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
-        print(f'Message from singularity: \n {singularity} \n')
+    if int(configfile["SINGULARITY"]["value"]) == 1:
+        print(True)
+        singularity = Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif' )# str(configfile["SINGULARITY"]["singularity"]))
+        logging.info(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
+        logging.info(f'Message from singularity: \n {singularity}')
+        if verbose:
+            print(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
+            print(f'Message from singularity: \n {singularity} \n')
 
     prepare_conf = ''
     try:
-        prepare_conf = Client.execute(['cd-prepareconf', '-r', 'protein.pdbqt', '-l',
-                    str(ligand), '-t', str(tunnel)])
+        if int(configfile["SINGULARITY"]["value"]) == 1:
+            print(True)
+            prepare_conf = Client.execute(['cd-prepareconf', '-r', 'protein.pdbqt', '-l',
+                                           str(ligand), '-t', str(tunnel)])
+        else:
+            subprocess.call(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf', shell=True)
+            logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
+            if verbose:
+                print(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+                print(f'Message from cd-prepareconf: \n {prepare_conf}')
 
-        logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-        logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
-        if verbose:
-            print(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-            print(f'Message from cd-prepareconf: \n {prepare_conf}')
-
-        with open('caverdock.conf', 'w+') as file_conf:
-            file_conf.write(prepare_conf)
+            with open('caverdock.conf', 'w+') as file_conf:
+                file_conf.write(prepare_conf)
     except:
         logging.error(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
         logging.error(f'Message from cd-prepareconf: \n {prepare_conf}')
@@ -96,8 +100,12 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
 
 
     try:
-        mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
-                    '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
+        if int(configfile["SINGULARITY"]["value"]) == 1:
+            print(True)
+            mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
+                                     '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
+        else:
+            subprocess.call(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
         logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
         logging.info(f'Message from mpirun: \n {mpirun}')
         if verbose:
@@ -135,12 +143,11 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
    # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
     logging.info(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
     if verbose:
-        print(f'{(configfile["SINGULARITY"]["singularity"])} -O -i emin1.in '
+        print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
               f'-x mdcrd -r emin1.rst')
     # run _11_run_tleap.sh
     # tun _21_run-mm_meta.sh
-
 
     try:
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
@@ -174,13 +181,17 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
 
 def run_cd_energy_profile(tunnel, traj, configfile, verbose):
     try:
-        Client.load(str(configfile['SINGULARITY']['singularity']))
+        if int(configfile["SINGULARITY"]["value"]) == 1:
+            Client.load(str(configfile['SINGULARITY']['singularity']))
         if verbose:
             print(['cd-energyprofile','-d', os.getcwd() + '/' + str(tunnel),
                    '-t', str(traj), '-s', str(configfile['CPU']['cpu'])])
-        file = Client.execute(['cd-energyprofile','-d',
+        if int(configfile["SINGULARITY"]["value"]) == 1:
+            file = Client.execute(['cd-energyprofile','-d',
                                os.getcwd() + '/' + str(tunnel), '-t', str(traj),
                                '-s', str(configfile['CPU']['cpu'])])
+        else:
+            file = subprocess.call(f'cd-energyprofile -d {os.getcwd()}/{str(tunnel)} -t {str(traj)} -s {str(configfile["CPU"]["cpu"])}', shell=True)
         logging.info(f'Message from cd-energyprofieL: \n {file}')
 
     except:
@@ -190,7 +201,7 @@ def run_cd_energy_profile(tunnel, traj, configfile, verbose):
         sys.exit(1)
 
     with open(f'{os.getcwd()}/energy.dat', 'w+') as file_energy_dat:
-        file_energy_dat.write(file)
+        file_energy_dat.write(str(file))
 
     if os.path.exists('energy.dat'):
         return 0
@@ -249,10 +260,16 @@ def remove_ligand_from_emin(protein, verbose, configfile):
             if not LIGAND in line:
                     newfile.write(line)
     # convert pdb to pdbqt
-    Client.load(str(configfile['SINGULARITY']['singularity']))
+    if int(configfile["SINGULARITY"]["value"]) == 1:
+        Client.load(configfile["SINGULARITY"]["singularity"])
+    else:
+        print('nenahrana singularita')
     convert = ''
     try:
-        convert = Client.execute(['prepare_receptor4', '-r', 'protein.pdb'])
+        if int(configfile["SINGULARITY"]["value"]) == 1:
+            convert = Client.execute(['prepare_receptor4', '-r', 'protein.pdb'])
+        else:
+            convert = subprocess.call(f'prepare_receptor4 -r protein.pdb', shell=True)
         logging.info(f'Run prepare_receprot. Message: \n {convert}')
         if verbose:
             print(f'Run prepare_receprot. Message: \n {convert}')
