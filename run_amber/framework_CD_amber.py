@@ -66,8 +66,7 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
     # mohlo by to být externě v dalším souboru
 
     if int(configfile["SINGULARITY"]["value"]) == 1:
-        print(True)
-        singularity = Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif' )# str(configfile["SINGULARITY"]["singularity"]))
+        singularity = Client.load(str(configfile["SINGULARITY"]["singularity"]))
         logging.info(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
         logging.info(f'Message from singularity: \n {singularity}')
         if verbose:
@@ -77,11 +76,10 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
     prepare_conf = ''
     try:
         if int(configfile["SINGULARITY"]["value"]) == 1:
-            print(True)
             prepare_conf = Client.execute(['cd-prepareconf', '-r', 'protein.pdbqt', '-l',
                                            str(ligand), '-t', str(tunnel)])
         else:
-            subprocess.call(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf', shell=True)
+            prepare_conf = subprocess.call(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf', shell=True)
             logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
             logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
             if verbose:
@@ -101,11 +99,10 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
 
     try:
         if int(configfile["SINGULARITY"]["value"]) == 1:
-            print(True)
             mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
                                      '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
         else:
-            subprocess.call(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
+            mpirun = subprocess.call(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
         logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
         logging.info(f'Message from mpirun: \n {mpirun}')
         if verbose:
@@ -269,7 +266,7 @@ def remove_ligand_from_emin(protein, verbose, configfile):
         if int(configfile["SINGULARITY"]["value"]) == 1:
             convert = Client.execute(['prepare_receptor4', '-r', 'protein.pdb'])
         else:
-            convert = subprocess.call(f'prepare_receptor4 -r protein.pdb', shell=True)
+            convert = subprocess.run(['prepare_receptor4', '-r', 'protein.pdb'])
         logging.info(f'Run prepare_receprot. Message: \n {convert}')
         if verbose:
             print(f'Run prepare_receprot. Message: \n {convert}')
