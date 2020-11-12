@@ -64,6 +64,7 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
     # OUT: pdbqt file with lb and ub
 
     # mohlo by to být externě v dalším souboru
+    prepare_conf = ''
 
     if int(configfile["SINGULARITY"]["value"]) == 1:
         singularity = Client.load(str(configfile["SINGULARITY"]["singularity"]))
@@ -72,43 +73,49 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
         if verbose:
             print(f'Singularity for caverdock: {configfile["SINGULARITY"]["singularity"]} \n')
             print(f'Message from singularity: \n {singularity} \n')
-
-    prepare_conf = ''
-
-    try:
-        if int(configfile["SINGULARITY"]["value"]) == 1:
-            prepare_conf = Client.execute([configfile["CD-PREPARECONF"]["path_cd-prepareconf"], '-r', 'protein.pdbqt', '-l',
-                                           str(ligand), '-t', str(tunnel)])
-        else:
-            prepare_conf = subprocess.call(f'{configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf', shell=True)
-            logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-            logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
+        prepare_conf = Client.execute([configfile["CD-PREPARECONF"]["path_cd-prepareconf"], '-r', 'protein.pdbqt', '-l',
+                                       str(ligand), '-t', str(tunnel)])
+        with open('caverdock.conf', 'w+') as file_conf:
+            file_conf.write(prepare_conf)
+        if not os.path.isfile('caverdock.conf'):
+            logging.error(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            logging.error(f'Message from cd-prepareconf: \n {prepare_conf}')
             if verbose:
-                print(f'{configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-                print(f'Message from cd-prepareconf: \n {prepare_conf}')
+                print(f'ERROR: {configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+                print(f'ERROR: Message from cd-prepareconf: \n {prepare_conf}')
+            sys.exit(1)
 
-    except:
-        logging.error(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-        logging.error(f'Message from cd-prepareconf: \n {prepare_conf}')
+    else:
+        subprocess.call(f'{configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf', shell=True)
+        logging.info(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+        #logging.info(f'Message from cd-prepareconf: \n {prepare_conf}')
         if verbose:
-            print(f'ERROR: {configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
-            print(f'ERROR: Message from cd-prepareconf: \n {prepare_conf}')
-        sys.exit(1)
+            print(f'{configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            #print(f'Message from cd-prepareconf: \n {prepare_conf}')
+
+        if not os.path.isfile('caverdock.conf'):
+            logging.error(f'cd-prepareconf -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+            #logging.error(f'Message from cd-prepareconf: \n {prepare_conf}')
+            if verbose:
+                print(f'ERROR: {configfile["CD-PREPARECONF"]["path_cd-prepareconf"]} -r protein.pdbqt -l  {ligand} -t {tunnel} > caverdock.conf')
+                #print(f'ERROR: Message from cd-prepareconf: \n {prepare_conf}')
+            sys.exit(1)
 
 
-    try:
-        if int(configfile["SINGULARITY"]["value"]) == 1:
-            mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
-                                     '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
-        else:
-            mpirun = subprocess.call(f'/usr/bin/mpirun.mpich -np {str(CPU)} {configfile["CAVERDOCK"]["path_caverdock"]}  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
-        logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
-        logging.info(f'Message from mpirun: \n {mpirun}')
-        if verbose:
-            print(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
-            print(f'Message from mpirun: \n {mpirun}')
+    if int(configfile["SINGULARITY"]["value"]) == 1:
+        mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
+                                 '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
 
-    except:
+    else:
+        subprocess.call(f'/usr/bin/mpirun.mpich -np {str(CPU)} {configfile["CAVERDOCK"]["path_caverdock"]}  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
+
+    logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+    logging.info(f'Message from mpirun: \n {mpirun}')
+    if verbose:
+        print(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        print(f'Message from mpirun: \n {mpirun}')
+
+    if not os.path.isfile(f'{RESULT_CD}-lb.pdbqt') or os.path.isfile(f'{RESULT_CD}-ub.pdbqt'):
         logging.error(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
         logging.error(f'Message from mpirun: \n {mpirun}')
         if verbose:
@@ -273,7 +280,7 @@ def remove_ligand_from_emin(protein, verbose, configfile):
         logging.info(f'Run prepare_receptor. Message: \n {configfile["PREPARE_RECEPTOR"]["path_prepare_receptor"]} -r protein.pdb ')
         if verbose:
             print(f'{configfile["PREPARE_RECEPTOR"]["path_prepare_receptor"]} -r protein.pdb')
-            print(f'Message{repare_receptor}')
+            print(f'Message{prepare_receptor}')
         if not os.path.isfile('protein.pdbqt'):
             logging.error(f'Cannot run prepare_receptor. Try: \n {configfile["PREPARE_RECEPTOR"]["path_prepare_receptor"]} -r protein.pdb \n')
             if verbose:
