@@ -101,7 +101,7 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
                 #print(f'ERROR: Message from cd-prepareconf: \n {prepare_conf}')
             sys.exit(1)
 
-
+    mpirun= ''
     if int(configfile["SINGULARITY"]["value"]) == 1:
         mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
                                  '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
@@ -115,7 +115,8 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
         print(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
         print(f'Message from mpirun: \n {mpirun}')
 
-    if not os.path.isfile(f'{RESULT_CD}-lb.pdbqt') or os.path.isfile(f'{RESULT_CD}-ub.pdbqt'):
+    if not (os.path.isfile(f'{RESULT_CD}-lb.pdbqt') or os.path.isfile(f'{RESULT_CD}-ub.pdbqt')):
+        print(f'{RESULT_CD}-lb.pdbqt')
         logging.error(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
         logging.error(f'Message from mpirun: \n {mpirun}')
         if verbose:
@@ -143,20 +144,50 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
     print('Check whether input protein is without ligand.')
    # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
     logging.info(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
+
+
     if verbose:
         print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
               f'-x mdcrd -r emin1.rst')
-    # run _11_run_tleap.sh
-    # tun _21_run-mm_meta.sh
 
     try:
+        subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
+
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
                         f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                         f'-x mdcrd -r emin1.rst', shell = True)
         logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
                      f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                      f'-x mdcrd -r emin1.rst')
+
+        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
+                        f'-o emin2.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-x mdcrd -r emin2.rst', shell = True)
+        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
+                     f'-o emin2.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-x mdcrd -r emin2.rst')
+
+        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
+                        f'-o emin3.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-x mdcrd -r emin3.rst', shell = True)
+        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
+                     f'-o emin3.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-x mdcrd -r emin3.rst')
+
+        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
+                        f'-o emin4.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-x mdcrd -r emin4.rst', shell = True)
+        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
+                     f'-o emin4.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-x mdcrd -r emin4.rst')
+
+        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
+                        f'-o emin5.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-x mdcrd -r emin5.rst', shell = True)
+        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
+                     f'-o emin5.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-x mdcrd -r emin5.rst')
 
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -p complex.prmtop'
                         f' -c emin1.rst > emin1.pdb', shell = True)
@@ -181,6 +212,7 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
     return 0
 
 def run_cd_energy_profile(tunnel, traj, configfile, verbose):
+    file = ''
     try:
         if int(configfile["SINGULARITY"]["value"]) == 1:
             Client.load(str(configfile['SINGULARITY']['singularity']))
@@ -190,7 +222,8 @@ def run_cd_energy_profile(tunnel, traj, configfile, verbose):
             file = Client.execute(['cd-energyprofile','-d',
                                os.getcwd() + '/' + str(tunnel), '-t', str(traj),
                                '-s', str(configfile['CPU']['cpu'])])
-
+            with open(f'{os.getcwd()}/energy.dat', 'w') as file_energy_dat:
+                file_energy_dat.write(str(file))
         else:
             subprocess.call(f'{configfile["CD-ENERGYPROFILE"]["path_cd-energyprofile"]} -d {os.getcwd()}/{str(tunnel)} -t {str(traj)} -s {str(configfile["CPU"]["cpu"])} > energy.dat', shell=True)
         if verbose:
@@ -202,14 +235,10 @@ def run_cd_energy_profile(tunnel, traj, configfile, verbose):
             print('cd-energyprofile returncode is not 0. Check logfile.')
         logging.error(f'cd-energyprofile returncode is not 0.')
         sys.exit(1)
-    with open(f'{os.getcwd()}/energy.dat', 'w') as file_energy_dat:
-        file_energy_dat.write(str(file))
-
-
-    if os.path.exists('energy.dat'):
-        return 0
-    else:
-        print('energy.dat does not exist. Exit framework.')
+    if not os.path.exists('energy.dat'):
+        logging.error(f'Cannot make energy.dat')
+        if verbose:
+            print('Energy.dat not exists')
         sys.exit(1)
 
 
