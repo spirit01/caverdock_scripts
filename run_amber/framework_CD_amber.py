@@ -358,7 +358,7 @@ def main():
     logging.info(f'#Protein : {args.protein} -> protein.pdb \n')
     logging.info(f'#Ligand : {args.ligand} \n')
     logging.info(f'#Tunnel: {args.tunnel} \n')
-    #rslt_dir = args.results_dir
+    rslt_dir = '.' #args.results_dir
     #if rslt_dir == '.':
     #    rslt_dir = os.getcwd()
 
