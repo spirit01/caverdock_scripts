@@ -51,8 +51,8 @@ def get_argument():
 
     parser.add_argument("-config", help = 'Location config.ini file.', type=Path, required=True)
 
-    parser.add_argument("-results_dir", help="Choose directory to save files.",
-                        metavar="DIR", dest="results_dir")
+    #parser.add_argument("-results_dir", help="Choose directory to save files.",
+    #                    metavar="DIR", dest="results_dir")
 
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                        dest="verbose", action = "store_true")
@@ -154,6 +154,8 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
     try:
         subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
 
+        subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
+
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
                         f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                         f'-x mdcrd -r emin1.rst', shell = True)
@@ -189,21 +191,34 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
                      f'-o emin5.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                      f'-x mdcrd -r emin5.rst')
 
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -p complex.prmtop'
+        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
                         f' -c emin1.rst > emin1.pdb', shell = True)
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]}  -p complex.prmtop'
+        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
+                     f' -c emin1.rst > emin1.pdb')
+
+        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
                         f' -c emin2.rst > emin3.pdb', shell = True)
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]}  -p complex.prmtop'
+        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
+                     f' -c emin2.rst > emin3.pdb')
+
+        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
                         f' -c emin3.rst > emin3.pdb', shell = True)
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]}  -p complex.prmtop'
+        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
+                     f' -c emin3.rst > emin3.pdb')
+
+        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
                         f' -c emin4.rst > emin4.pdb', shell = True)
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]}  -p complex.prmtop'
+        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
+                     f' -c emin3.rst > emin3.pdb')
+
+        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
                         f' -c emin5.rst > emin5.pdb', shell = True)
+        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
+                     f' -c emin5.rst > emin5.pdb')
 
         if verbose:
-            print(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
-                  f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-                  f'-x mdcrd -r emin1.rst')
+            print(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
+                  f' -c emin1.rst > emin1.pdb', shell = True)
     except:
         logging.error('Cannot run amber.')
         print('Cannot run amber.')
@@ -343,9 +358,9 @@ def main():
     logging.info(f'#Protein : {args.protein} -> protein.pdb \n')
     logging.info(f'#Ligand : {args.ligand} \n')
     logging.info(f'#Tunnel: {args.tunnel} \n')
-    rslt_dir = args.results_dir
-    if rslt_dir == '.':
-        rslt_dir = os.getcwd()
+    #rslt_dir = args.results_dir
+    #if rslt_dir == '.':
+    #    rslt_dir = os.getcwd()
 
     if args.verbose:
         print("Verbosity turned on")
