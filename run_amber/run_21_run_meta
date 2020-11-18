@@ -1,7 +1,0 @@
-for i in ./*/;
-do
-cd "$i";
-echo $i;
-qsub ./_21_run-mm_meta.sh;
-cd ../;
-done
