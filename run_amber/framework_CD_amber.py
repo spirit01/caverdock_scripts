@@ -17,9 +17,9 @@ from time import localtime, strftime
 import re
 
 
-LIGAND = 'BEO'
-CPU = 2
-RESULT_CD = 'result_CD'
+#LIGAND = 'BEO'
+#CPU = 2
+#RESULT_CD = 'result_CD'
 
 # IN: protein, ligand, tunel,  traj in PDBQT format OR run CD and calculate PDBQT
 # OUT: new pdbqt file with better energy of trajectory OR step of trajectory with bottleneck
@@ -105,24 +105,24 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
 
     mpirun= ''
     if int(configfile["SINGULARITY"]["value"]) == 1:
-        mpirun = Client.execute(['mpirun', '-np', str(CPU), 'caverdock',
-                                 '--config', 'caverdock.conf', '--out', str(RESULT_CD)])
+        mpirun = Client.execute(['mpirun', '-np', configfile["CPU"]["cpu"], 'caverdock',
+                                 '--config', 'caverdock.conf', '--out', str(configfile["RESULT_CD"]["name"])])
 
     else:
-        subprocess.call(f'/usr/bin/mpirun.mpich -np {str(CPU)} {configfile["CAVERDOCK"]["path_caverdock"]}  --config caverdock.conf --out {str(RESULT_CD)}', shell=True)
+        subprocess.call(f'/usr/bin/mpirun.mpich -np {str(configfile["CPU"]["cpu"])} {configfile["CAVERDOCK"]["path_caverdock"]}  --config caverdock.conf --out {str(configfile["RESULT_CD"]["name"])}', shell=True)
 
-    logging.info(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+    logging.info(f'mpirun -np {str(configfile["CPU"]["cpu"])} caverdock  --config caverdock.conf --out {str(configfile["RESULT_CD"]["name"])}')
     logging.info(f'Message from mpirun: \n {mpirun}')
     if verbose:
-        print(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+        print(f'mpirun -np {str(configfile["CPU"]["cpu"])} caverdock  --config caverdock.conf --out {str(configfile["RESULT_CD"]["name"])}')
         print(f'Message from mpirun: \n {mpirun}')
 
-    if not (os.path.isfile(f'{RESULT_CD}-lb.pdbqt') or os.path.isfile(f'{RESULT_CD}-ub.pdbqt')):
-        print(f'{RESULT_CD}-lb.pdbqt')
-        logging.error(f'mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+    if not (os.path.isfile(f'{configfile["RESULT_CD"]["name"]}-lb.pdbqt') or os.path.isfile(f'{configfile["RESULT_CD"]["name"]}-ub.pdbqt')):
+        print(f'{configfile["RESULT_CD"]["name"]}-lb.pdbqt')
+        logging.error(f'mpirun -np {str(configfile["CPU"]["cpu"])} caverdock  --config caverdock.conf --out {str(configfile["RESULT_CD"]["name"])}')
         logging.error(f'Message from mpirun: \n {mpirun}')
         if verbose:
-            print(f'ERROR: mpirun -np {str(CPU)} caverdock  --config caverdock.conf --out {str(RESULT_CD)}')
+            print(f'ERROR: mpirun -np {str(configfile["CPU"]["cpu"])} caverdock  --config caverdock.conf --out {str(configfile["RESULT_CD"]["name"])}')
             print(f'ERROR: Message from mpirun: \n {mpirun}')
         sys.exit(1)
 
@@ -134,9 +134,11 @@ def check_config_file(config, verbose):
     else:
         print('Config.ini file does not exist!')
     return False
-
+def prepare_data_amber(ligand):
+    subprocess.call(f'antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi', shell=True)
+    subprocess.call(f'parmchk2 -i ligand.prepi -f prepi -o frcmod_lig2', shell=True)
 #protein is pdb file WITHOUT ligand
-def run_amber(protein, CD_lb_ub, verbose, configfile):
+def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
     # IN: struktura proteinu, ligand
     # OUT: nova struktura proteinu po minimalizaci
 
@@ -145,9 +147,9 @@ def run_amber(protein, CD_lb_ub, verbose, configfile):
     #protein_pdb = f'./trajectories/{protein[0]/}'
     print('Check whether input protein is without ligand.')
    # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
-    logging.info(f'{os.getcwd()} {RESULT_CD}-{CD_lb_ub}.pdbqt {protein}')
+    logging.info(f'{os.getcwd()} {configfile["RESULT_CD"]["name"]}-{CD_lb_ub}.pdbqt {protein}')
 
-
+    prepare_data_amber(ligand)
     if verbose:
         print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
@@ -307,7 +309,7 @@ def remove_ligand_from_emin(protein, verbose, configfile):
     #  ted defaultne vypocitany emin5.pdb
     with open(protein) as oldfile, open('protein.pdb', 'w+') as newfile:
         for line in oldfile:
-            if not LIGAND in line:
+            if not configfile["LIGAND"]["name"] in line:
                     newfile.write(line)
     # convert pdb to pdbqt
     prepare_receptor = ''
@@ -343,9 +345,9 @@ def parse_structures(file_name):
 # kontroluje vstupy nutne pro amber. Source je misto,
 # kde jsou tyto parametry ulozeny. Defaultne zatim v pracovnim adresari
 def check_files(source, protein, ligand):
-    if not Path(f'{source}/_Xqmin_tmp.in').is_file():
-        print("File _Xqmin_tmp.in not exist")
-        sys.exit(1)
+    #if not Path(f'{source}/_Xqmin_tmp.in').is_file():
+    #    print("File _Xqmin_tmp.in not exist")
+    #    sys.exit(1)
 
     if not Path(f'{source}/{protein}').is_file():
         print(f'File {protein} not exist')
@@ -387,13 +389,13 @@ def make_separate_directory(file_all, protein, source, configfile):
             file_traj.write(file)
         shutil.copy(protein, f'./trajectories/model_{count}/')
         # nakopiruje navic potrebna data
-        shutil.copy(f'{source}/_Xqmin_tmp.in', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/_Xqmin_tmp.in', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_11_run_tleap', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_21_run_prepare_sander', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/{protein}', f'./trajectories/model_{count}/')
-        shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
-        shutil.copy(f'{source}/ref.crd', f'./trajectories/model_{count}/')
-        shutil.copy(f'{source}/frcmod_lig2', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/ref.crd', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/frcmod_lig2', f'./trajectories/model_{count}/')
 
 
         try:
@@ -486,15 +488,15 @@ def main():
     if not args.traj:
         print('NOT')
         run_caverdock(args.ligand, args.tunnel, configfile, args.verbose)
-        logging.info(f'#File from CaverDock: {str(RESULT_CD)}-{args.CD_lb_ub}.pdbqt \n')
-        args.traj = f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbqt'
+        logging.info(f'#File from CaverDock: {str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt \n')
+        args.traj = f'{str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt'
         if args.verbose:
-            print(f'Run CD and create new traj pdbqt result_CD-{args.CD_lb_ub}.pdbqt')
+            print(f'Run CD and create new traj pdbqt {str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt')
 
         #parse_strcture - rozdeleni trajektorie z caverdocku
         #file_all = parse_structures(f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbqt')
         #summary(source,f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbq' , 'protein.pdb')
-        file_all = parse_structures(f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbqt' )
+        file_all = parse_structures(f'{str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt' )
         #print(file_all)
         make_separate_directory(file_all, 'protein.pdb', source, configfile)
 
@@ -515,7 +517,7 @@ def main():
     dir=(f'{source}/trajectories/{strcre_for_amber_energy[0]}')
     os.chdir(dir)
     print(f'slozka {dir}')
-    run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile) # create new emin5.pdb with better structure
+    run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand) # create new emin5.pdb with better structure
 
     #subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop '
     #                f'< {configfile["TRAJECTORIES"]["path_trajectories"]}{strcre_for_amber_energy[0]}/emin5.rst '
