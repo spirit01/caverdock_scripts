@@ -345,9 +345,6 @@ def parse_structures(file_name):
 # kontroluje vstupy nutne pro amber. Source je misto,
 # kde jsou tyto parametry ulozeny. Defaultne zatim v pracovnim adresari
 def check_files(source, protein, ligand):
-    #if not Path(f'{source}/_Xqmin_tmp.in').is_file():
-    #    print("File _Xqmin_tmp.in not exist")
-    #    sys.exit(1)
 
     if not Path(f'{source}/{protein}').is_file():
         print(f'File {protein} not exist')
@@ -363,7 +360,7 @@ def check_files(source, protein, ligand):
 
     if not Path(f'{source}/ligand.prepi').is_file():
         try:
-            subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb')
+            subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb', shell = True)
             subprocess.call("antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi", shell = True)
         except:
             print("File ligand.prepi not exist")
@@ -396,8 +393,6 @@ def make_separate_directory(file_all, protein, source, configfile):
         #shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
         #shutil.copy(f'{source}/ref.crd', f'./trajectories/model_{count}/')
         #shutil.copy(f'{source}/frcmod_lig2', f'./trajectories/model_{count}/')
-
-
         try:
             subprocess.run(f'rm ./trajectories/model_{count}/emin2*', shell = True)
         except:
