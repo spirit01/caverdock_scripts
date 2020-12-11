@@ -481,7 +481,6 @@ def main():
     check_files(source, 'protein.pdb', args.ligand)
     print(True)
     if not args.traj:
-        print('NOT')
         run_caverdock(args.ligand, args.tunnel, configfile, args.verbose)
         logging.info(f'#File from CaverDock: {str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt \n')
         args.traj = f'{str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt'
@@ -496,9 +495,7 @@ def main():
         make_separate_directory(file_all, 'protein.pdb', source, configfile)
 
     else:
-        print('YES')
         file_all = parse_structures(args.traj)
-        print('YES')
         make_separate_directory(file_all, 'protein.pdb', source, configfile)
 
     #summary(source, args.traj, 'protein.pdb')
@@ -511,7 +508,6 @@ def main():
     #pouzit novou strukturu z amberu i s polohou ligandu
     dir=(f'{source}/trajectories/{strcre_for_amber_energy[0]}')
     os.chdir(dir)
-    print(f'slozka {dir}')
     run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand) # create new emin5.pdb with better structure
 
     #subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop '
