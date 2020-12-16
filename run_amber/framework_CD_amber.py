@@ -5,21 +5,14 @@ import os
 import sys
 from argparse import ArgumentParser
 from spython.main import Client
-from operator import itemgetter
 from pathlib import Path
 import subprocess
 import operator
-import parse_structures_from_caverdock as parse_cd
 import shutil
 import configparser
 import logging
 from time import localtime, strftime
 import re
-
-
-#LIGAND = 'BEO'
-#CPU = 2
-#RESULT_CD = 'result_CD'
 
 # IN: protein, ligand, tunel,  traj in PDBQT format OR run CD and calculate PDBQT
 # OUT: new pdbqt file with better energy of trajectory OR step of trajectory with bottleneck
@@ -51,7 +44,7 @@ def get_argument():
 
     parser.add_argument("-tunnel", help = 'Tunnel name in dsd format.', type=Path, required=True)
 
-    parser.add_argument("-config", help = 'Location config.ini file.', type=Path, required=True)
+    parser.add_argument("-config", help = 'Location of config.ini file.', type=Path, required=True)
 
     #parser.add_argument("-results_dir", help="Choose directory to save files.",
     #                    metavar="DIR", dest="results_dir")
@@ -64,8 +57,6 @@ def get_argument():
 def run_caverdock(ligand, tunnel, configfile, verbose):
     # IN: protein, ligand, tunel
     # OUT: pdbqt file with lb and ub
-
-    # mohlo by to být externě v dalším souboru
     prepare_conf = ''
 
     if int(configfile["SINGULARITY"]["value"]) == 1:
@@ -139,14 +130,13 @@ def prepare_data_amber(ligand):
     subprocess.call(f'parmchk2 -i ligand.prepi -f prepi -o frcmod_lig2', shell=True)
 #protein is pdb file WITHOUT ligand
 def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
-    # IN: struktura proteinu, ligand
-    # OUT: nova struktura proteinu po minimalizaci
+    # IN: structure of protein and ligand
+    # OUT: new structure of protein after minimization
 
     # return optimal structure from amber -> emin5.pdb
     # directory_source, file_path to trajectories, protein
     #protein_pdb = f'./trajectories/{protein[0]/}'
     print('Check whether input protein is without ligand.')
-   # parse_cd.main('.', RESULT_CD, CD_lb_ub, '.pdbqt')
     logging.info(f'{os.getcwd()} {configfile["RESULT_CD"]["name"]}-{CD_lb_ub}.pdbqt {protein}')
 
     prepare_data_amber(ligand)
@@ -155,7 +145,6 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
               f'-x mdcrd -r emin1.rst')
     subprocess.call(f'chmod u+x ./_11_run_tleap; chmod u+x ./_21_run_prepare_sander', shell = True)
-
     subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
     subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
 
@@ -221,14 +210,12 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
         logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
                      f' -c emin5.rst > emin5.pdb')
         if verbose:
-            print(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
+            print(f'First step: \n {configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
                   f' -c emin1.rst > emin1.pdb')
     except:
-        logging.error('Cannot run amber.')
-        print('Cannot run amber.')
+        logging.error('Cannot run amber. Check logfile.')
+        print('Cannot run amber. Check logfile.')
         sys.exit(1)
-
-
     return 0
 
 def run_cd_energy_profile(tunnel, traj, configfile, verbose):
@@ -265,12 +252,11 @@ def run_cd_energy_profile(tunnel, traj, configfile, verbose):
 
 def find_maximum_CD_curve(result_cd, ub_lb, verbose):
     # IN: pdbqt soubor
-    # OUT: konkrétní snapchot proteinu s maximální energií
+    # OUT: protein's snapchot with highest energy.
 
-    # najít maximum na pdqt křivce, a vrátit strukturu, která odpovídá maximum a
-    # na tu pustit amber
-    # nejprve testova na hotově pdbqt křivce. Buď lze dát hotovou křivku
-    # nebo si to nechat spošítat znovu
+    # find max. energy value and return strucutre with this energy. Then run amber and try to find better conformation
+    # of protein.
+    # You can insert pdbqt file with trajectory or use CD to calculate the new trajectory.
 
     num_str_energy = []
     with open(f'energy.dat') as file_energy:
@@ -336,14 +322,14 @@ def remove_ligand_from_emin(protein, verbose, configfile):
                 print(f'Cannot run prepare_receptor. Try: \n {configfile["PREPARE_RECEPTOR"]["path_prepare_receptor"]} -r protein.pdb')
             sys.exit(1)
 
-# parsuje trajektorii z caverdocku do jednotlivych kroku trajektorie
+# parse trajectory from CD into separate step
 def parse_structures(file_name):
     file_string = Path(file_name).read_text()
     file_all = re.findall('MODEL.*?ENDMDL', file_string, re.DOTALL)
     return file_all
 
-# kontroluje vstupy nutne pro amber. Source je misto,
-# kde jsou tyto parametry ulozeny. Defaultne zatim v pracovnim adresari
+# check input for amber. Source is set in working directroy default.
+
 def check_files(source, protein, ligand):
 
     if not Path(f'{source}/{protein}').is_file():
@@ -386,15 +372,12 @@ def make_separate_directory(file_all, protein, source, configfile):
             file_traj.write(file)
         shutil.copy(protein, f'./trajectories/model_{count}/')
         # nakopiruje navic potrebna data
-        #shutil.copy(f'{source}/_Xqmin_tmp.in', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_11_run_tleap', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/_21_run_prepare_sander', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/{protein}', f'./trajectories/model_{count}/')
-        #shutil.copy(f'{source}/ligand.prepi', f'./trajectories/model_{count}/')
-        #shutil.copy(f'{source}/ref.crd', f'./trajectories/model_{count}/')
-        #shutil.copy(f'{source}/frcmod_lig2', f'./trajectories/model_{count}/')
+
         try:
-            subprocess.run(f'rm ./trajectories/model_{count}/emin2*', shell = True)
+            subprocess.run(f'rm ./trajectories/model_{count}/emin*', shell = True)
         except:
             pass
         try:
@@ -406,7 +389,7 @@ def make_separate_directory(file_all, protein, source, configfile):
         except:
             pass
         # convert traj_position_ligand_{count}.pdbqt to pdb -> singularity
-        #Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
+        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
         if int(configfile["SINGULARITY"]["value"]) == 1:
 
             Client.execute(['/opt/mgltools-1.5.6/bin/pythonsh',
@@ -421,7 +404,7 @@ def make_separate_directory(file_all, protein, source, configfile):
         subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > '
                         f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
 
-        # spojit 'hloupe" ligand, protein do complex.pdb
+        # split (ugly) ligand and protein into complex.pdb
         subprocess.call( #remove last line in file with END. IMPORTANT!
             f'head -n -1 ./trajectories/model_{count}/{protein} > ./trajectories/model_{count}/complex.pdb | '
             f'echo TER >> ./trajectories/model_{count}/complex.pdb',
@@ -433,17 +416,23 @@ def make_separate_directory(file_all, protein, source, configfile):
         subprocess.call(f'echo END >> ./trajectories/model_{count}/complex.pdb',
                         shell=True)
 
-
-#def summary(directory_source, pdbqt_traj, protein):
-#    file_all = parse_structures(pdbqt_traj)
-    #check_files(directory_source, protein, )
-#    make_separate_directory(file_all, protein, directory_source)
-
-def check_input_data():
-    pass
+def check_input_data(args):
+        if not os.path.exists(args.protein):
+            print(f'{args.protein} does not exist')
+            logging.error(f'{args.protein} does not exist')
+            sys.exit(1)
+        if not os.path.exists(args.ligand):
+            print(f'{args.ligand} does not exist')
+            logging.error(f'{args.ligand} does not exist')
+            sys.exit(1)
+        if not os.path.exists(args.tunnel):
+            print(f'{args.tunnel} does not exist')
+            logging.error(f'{args.tunnel} does not exist')
+            sys.exit(1)
 
 def main():
     args = get_argument()
+    check_input_data(args)
     print(f'Current working directory: {os.getcwd()}')
     print(f'Check whether protein is WITHOUT ligand.')
 
@@ -465,8 +454,6 @@ def main():
     logging.info(f'#Tunnel: {args.tunnel} \n')
     rslt_dir = os.getcwd() #args.results_dir
     source = os.getcwd()
-    #if rslt_dir == '.':
-    #    rslt_dir = os.getcwd()
 
     if args.verbose:
         print("Verbosity turned on")
@@ -487,39 +474,23 @@ def main():
         if args.verbose:
             print(f'Run CD and create new traj pdbqt {str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt')
 
-        #parse_strcture - rozdeleni trajektorie z caverdocku
-        #file_all = parse_structures(f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbqt')
-        #summary(source,f'{str(RESULT_CD)}-{args.CD_lb_ub}.pdbq' , 'protein.pdb')
         file_all = parse_structures(f'{str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt' )
-        #print(file_all)
         make_separate_directory(file_all, 'protein.pdb', source, configfile)
 
     else:
         file_all = parse_structures(args.traj)
         make_separate_directory(file_all, 'protein.pdb', source, configfile)
 
-    #summary(source, args.traj, 'protein.pdb')
-
-
     run_cd_energy_profile(args.tunnel, args.traj, configfile, args.verbose)
     max_value_and_strctr = find_maximum_CD_curve(rslt_dir, args.CD_lb_ub, args.verbose)
     strcre_for_amber_energy = find_strce_for_amber(max_value_and_strctr, args.verbose, configfile)
     print(strcre_for_amber_energy)
-    #pouzit novou strukturu z amberu i s polohou ligandu
+    # use new structure of protein  with ligand from amber
     dir=(f'{source}/trajectories/{strcre_for_amber_energy[0]}')
     os.chdir(dir)
     run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand) # create new emin5.pdb with better structure
-
-    #subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop '
-    #                f'< {configfile["TRAJECTORIES"]["path_trajectories"]}{strcre_for_amber_energy[0]}/emin5.rst '
-    #                f'> {configfile["TRAJECTORIES"]["path_trajectories"]}{strcre_for_amber_energy[0]}/emin5.pdb', shell = True)
-
     os.chdir(source)
-
     shutil.copy(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
-
-
-
 
 if __name__ == '__main__':
     main()
