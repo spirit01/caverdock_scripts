@@ -286,7 +286,8 @@ def find_strce_for_amber(strce_and_max, verbose, configfile):
             print('Dir trajectories is not in the right place.')
             sys.exit(1)
     for file in trajectories:
-        if str(strce_and_max[0]) in file:
+        if file == 'model_'+strce_and_max[0]:
+        #if str(strce_and_max[0]) in file:
             return (file, strce_and_max[1])
 
     return 0
