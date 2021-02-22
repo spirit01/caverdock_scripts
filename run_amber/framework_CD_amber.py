@@ -451,7 +451,7 @@ def check_input_data(args):
 
 def check_exist_file(file):
     if not os.path.exists(file):
-        print(f'File {file} does not exit. Exit framework.')
+        print(f'File {file} does not exist. Exit framework.')
         sys.exit(1)
 def main():
     args = get_argument()
