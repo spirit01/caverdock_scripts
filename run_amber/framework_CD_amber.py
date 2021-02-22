@@ -125,9 +125,19 @@ def check_config_file(config, verbose):
     else:
         print('Config.ini file does not exist!')
     return False
-def prepare_data_amber(ligand):
+def prepare_data_amber(ligand, verbose):
     subprocess.call(f'antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi', shell=True)
+    if verbose:
+        print(f'antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi')
+    logging.info(f'antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi')
+    check_exist_file('ligand.prepi')
+
     subprocess.call(f'parmchk2 -i ligand.prepi -f prepi -o frcmod_lig2', shell=True)
+    if verbose:
+        print(f'parmchk2 -i ligand.prepi -f prepi -o frcmod_lig2')
+    logging.info(f'parmchk2 -i ligand.prepi -f prepi -o frcmod_lig2')
+    check_exist_file('frcmod_lig2')
+
 #protein is pdb file WITHOUT ligand
 def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
     # IN: structure of protein and ligand
@@ -139,15 +149,18 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
     print('Check whether input protein is without ligand.')
     logging.info(f'{os.getcwd()} {configfile["RESULT_CD"]["name"]}-{CD_lb_ub}.pdbqt {protein}')
 
-    prepare_data_amber(ligand)
+    prepare_data_amber(ligand, verbose)
+
+    subprocess.call(f'chmod u+x ./_11_run_tleap; chmod u+x ./_21_run_prepare_sander', shell = True)
+    subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
+    check_exist_file('protein.incprd')
+    check_exist_file('protein.prmtop')
+    subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
+
     if verbose:
         print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
               f'-x mdcrd -r emin1.rst')
-    subprocess.call(f'chmod u+x ./_11_run_tleap; chmod u+x ./_21_run_prepare_sander', shell = True)
-    subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
-    subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
-
     try:
 
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
@@ -321,7 +334,7 @@ def remove_ligand_from_emin(protein, verbose, configfile):
             if verbose:
                 print(f'Cannot run prepare_receptor. Try: \n {configfile["PREPARE_RECEPTOR"]["path_prepare_receptor"]} -r protein.pdb')
             sys.exit(1)
-
+    check_exist_file('protein.pdbqt')
 # parse trajectory from CD into separate step
 def parse_structures(file_name):
     file_string = Path(file_name).read_text()
@@ -344,13 +357,7 @@ def check_files(source, protein, ligand):
         print("File _21_run_prepare_sander not exist")
         sys.exit(1)
 
-    if not Path(f'{source}/ligand.prepi').is_file():
-        try:
-            subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb', shell = True)
-            subprocess.call("antechamber -i ligand.pdb -fi pdb -o ligand.prepi -fo prepi", shell = True)
-        except:
-            print("File ligand.prepi not exist")
-            sys.exit(1)
+
 
 def make_separate_directory(file_all, protein, source, configfile):
     try:
@@ -388,33 +395,45 @@ def make_separate_directory(file_all, protein, source, configfile):
             subprocess.run(f'rm ./trajectories/model_{count}/complex.prmtop', shell = True)
         except:
             pass
+        try:
+            subprocess.run(f'rm ./trajectories/model_{count}/ligand.prepi', shell = True)
+        except:
+            pass
         # convert traj_position_ligand_{count}.pdbqt to pdb -> singularity
         Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
         if int(configfile["SINGULARITY"]["value"]) == 1:
-
             Client.execute(['/opt/mgltools-1.5.6/bin/pythonsh',
                             '/opt/mgltools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py',
                             '-f',os.getcwd()+'/trajectories/model_'+str(count)+'/position_ligand_*.pdbqt',
-                            '-o', os.getcwd()+'/trajectories/model_'+str(count)+'/ligand.pdb'])
+                            '-o', os.getcwd()+'/trajectories/model_'+str(count)+'/ligand_H.pdb'])
         else:
             subprocess.call(f'{configfile["PDBQT_TO_PDB"]["path_pdbqt_to_pdb"]} -f {os.getcwd()}/trajectories/model_{str(count)}/position_ligand_{str(count)}.pdbqt '
-                            f'-o {os.getcwd()}/trajectories/model_{str(count)}/ligand.pdb', shell=True)
-        subprocess.call(f'sed -i \'s/<0> d/TIP d/g\' ./trajectories/model_{count}/ligand.pdb', shell = True) #ligand_for_complex.pdb
+                            f'-o {os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb', shell=True)
+        check_exist_file('ligand_H.pdb')
+        subprocess.call(f'sed -i \'s/<0> d/{configfile["LIGAND"]["name"]} d/g\' ./trajectories/model_{count}/ligand_H.pdb', shell = True) #ligand_for_complex.pdb
+        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/ligand_H.pdb -o ./trajectories/model_{count}/ligand.pdb --nohyd', shell = True)
+        check_exist_file('ligand.pdb')
+
+        #subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb', shell = True)
+        subprocess.call(f'antechamber -i ./trajectories/model_{count}/ligand.pdb -fi pdb -o ./trajectories/model_{count}/ligand.prepi -fo prepi', shell = True)
+        check_exist_file('ligand.prepi')
 
         subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > '
                         f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
 
         # split (ugly) ligand and protein into complex.pdb
         subprocess.call( #remove last line in file with END. IMPORTANT!
-            f'head -n -1 ./trajectories/model_{count}/{protein} > ./trajectories/model_{count}/complex.pdb | '
-            f'echo TER >> ./trajectories/model_{count}/complex.pdb',
+            f'head -n -1 ./trajectories/model_{count}/{protein} > ./trajectories/model_{count}/complex_H.pdb | '
+            f'echo TER >> ./trajectories/model_{count}/complex_H.pdb',
             shell=True)
         subprocess.call(f'cat ./trajectories/model_{count}/ligand_for_complex.pdb'
-                        f' >> ./trajectories/model_{count}/complex.pdb ',
+                        f' >> ./trajectories/model_{count}/complex_H.pdb ',
                         #f'| echo TER >> ./trajectories/model_{count}/complex.pdb',
                         shell=True)
-        subprocess.call(f'echo END >> ./trajectories/model_{count}/complex.pdb',
+        subprocess.call(f'echo END >> ./trajectories/model_{count}/complex_H.pdb',
                         shell=True)
+        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/complex_H.pdb -o ./trajectories/model_{count}/complex.pdb --nohyd')
+        check_exist_file('complex.pdb')
 
 def check_input_data(args):
         if not os.path.exists(args.protein):
@@ -430,6 +449,10 @@ def check_input_data(args):
             logging.error(f'{args.tunnel} does not exist')
             sys.exit(1)
 
+def check_exist_file(file):
+    if not os.path.exists(file):
+        print(f'File {file} does not exit. Exit framework.')
+        sys.exit(1)
 def main():
     args = get_argument()
     check_input_data(args)
@@ -490,7 +513,11 @@ def main():
     os.chdir(dir)
     run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand) # create new emin5.pdb with better structure
     os.chdir(source)
-    shutil.copy(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
-
+    if args.verbose:
+        print(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
+    try:
+        shutil.copy(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
+    except:
+        print(f'Cannot copy final file {str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb')
 if __name__ == '__main__':
     main()
