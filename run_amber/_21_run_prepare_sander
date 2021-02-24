@@ -10,7 +10,7 @@
 
 
 #-----------NEEDS TO BE SPECIFIED -------------------
-LIG_ID=293      # This HAS to be the residue number!!!
+#LIG_ID=293      # This HAS to be the residue number!!!
 
 
 TOP=`ls *.prmtop`
@@ -21,7 +21,7 @@ cat >> ./emin1.in <<EOF
 # minimization with heavy atoms of complex restrained
  &cntrl
    imin=1,
-   ntr=1,restraint_wt=500.0,restraintmask=':1-$LIG_ID & !(@H=)',
+   ntr=1,restraint_wt=500.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
    maxcyc=1000, ncyc=500,
@@ -29,14 +29,13 @@ cat >> ./emin1.in <<EOF
 &gb
   igb=8, saltcon=0.100
 /
-
 EOF
 
 cat >> ./emin2.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
-   ntr=1,restraint_wt=100.0,restraintmask='@CA,C,N|(:TIP)@C1,C2,C3',
+   ntr=1,restraint_wt=100.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
    maxcyc=1000, ncyc=500,
@@ -52,7 +51,7 @@ cat >> ./emin3.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
-   ntr=1,restraint_wt=50.0,restraintmask='@CA,C,N|(:TIP)@C1,C2,C3',
+   ntr=1,restraint_wt=50.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
    maxcyc=1000, ncyc=500,
@@ -68,7 +67,7 @@ cat >> ./emin4.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
-   ntr=1,restraint_wt=25.0,restraintmask='@CA,C,N|(:TIP)@C1,C2,C3',
+   ntr=1,restraint_wt=25.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
    maxcyc=1000, ncyc=500,
@@ -84,7 +83,7 @@ cat >> ./emin5.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
-   ntr=1,restraint_wt=1.0,restraintmask='@CA,C,N|(:TIP)@C1,C2,C3',
+   ntr=1,restraint_wt=1.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
    maxcyc=1000, ncyc=500,

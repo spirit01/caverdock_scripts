@@ -49,6 +49,8 @@ def get_argument():
     #parser.add_argument("-results_dir", help="Choose directory to save files.",
     #                    metavar="DIR", dest="results_dir")
 
+    parser.add_argument("-restraint", help = 'Set restrain for ligand', required=True)
+
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                        dest="verbose", action = "store_true")
 
@@ -139,7 +141,7 @@ def prepare_data_amber(ligand, verbose):
     check_exist_file('frcmod_lig2')
 
 #protein is pdb file WITHOUT ligand
-def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
+def run_amber(protein, CD_lb_ub, verbose, configfile, ligand, restraint):
     # IN: structure of protein and ligand
     # OUT: new structure of protein after minimization
 
@@ -151,16 +153,21 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
 
     prepare_data_amber(ligand, verbose)
 
-    subprocess.call(f'chmod u+x ./_11_run_tleap; chmod u+x ./_21_run_prepare_sander', shell = True)
-    subprocess.call(f'./_11_run_tleap; ./_21_run_prepare_sander', shell = True)
-    check_exist_file('protein.incprd')
-    check_exist_file('protein.prmtop')
-    subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
+    #subprocess.call(f'chmod u+x ./_11_run_tleap; chmod u+x ./_21_run_prepare_sander', shell = True)
+    print(f'{configfile["11_RUN_TLEAP"]["11_run_tleap"]}')
+    subprocess.call(f'{configfile["11_RUN_TLEAP"]["11_run_tleap"]}', shell = True)
+    #@CA,C,N|(:BEO)@C1,C2,C3
+    subprocess.call(f'{configfile["21_RUN_SANDER"]["21_run_sander"]} \'{restraint}\'', shell = True)
+
+    check_exist_file('complex.inpcrd')
+    check_exist_file('complex.prmtop')
+    #subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
 
     if verbose:
         print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
               f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
               f'-x mdcrd -r emin1.rst')
+
     try:
 
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
@@ -229,6 +236,7 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand):
         logging.error('Cannot run amber. Check logfile.')
         print('Cannot run amber. Check logfile.')
         sys.exit(1)
+
     return 0
 
 def run_cd_energy_profile(tunnel, traj, configfile, verbose):
@@ -379,8 +387,8 @@ def make_separate_directory(file_all, protein, source, configfile):
             file_traj.write(file)
         shutil.copy(protein, f'./trajectories/model_{count}/')
         # nakopiruje navic potrebna data
-        shutil.copy(f'{source}/_11_run_tleap', f'./trajectories/model_{count}/')
-        shutil.copy(f'{source}/_21_run_prepare_sander', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/_11_run_tleap', f'./trajectories/model_{count}/')
+        #shutil.copy(f'{source}/_21_run_prepare_sander', f'./trajectories/model_{count}/')
         shutil.copy(f'{source}/{protein}', f'./trajectories/model_{count}/')
 
         try:
@@ -400,8 +408,8 @@ def make_separate_directory(file_all, protein, source, configfile):
         except:
             pass
         # convert traj_position_ligand_{count}.pdbqt to pdb -> singularity
-        Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
         if int(configfile["SINGULARITY"]["value"]) == 1:
+            Client.load('/home/petrahrozkova/Stažené/caverdock_1.1.sif')
             Client.execute(['/opt/mgltools-1.5.6/bin/pythonsh',
                             '/opt/mgltools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py',
                             '-f',os.getcwd()+'/trajectories/model_'+str(count)+'/position_ligand_*.pdbqt',
@@ -409,14 +417,14 @@ def make_separate_directory(file_all, protein, source, configfile):
         else:
             subprocess.call(f'{configfile["PDBQT_TO_PDB"]["path_pdbqt_to_pdb"]} -f {os.getcwd()}/trajectories/model_{str(count)}/position_ligand_{str(count)}.pdbqt '
                             f'-o {os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb', shell=True)
-        check_exist_file('ligand_H.pdb')
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb')
         subprocess.call(f'sed -i \'s/<0> d/{configfile["LIGAND"]["name"]} d/g\' ./trajectories/model_{count}/ligand_H.pdb', shell = True) #ligand_for_complex.pdb
         subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/ligand_H.pdb -o ./trajectories/model_{count}/ligand.pdb --nohyd', shell = True)
-        check_exist_file('ligand.pdb')
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand.pdb')
 
         #subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb', shell = True)
         subprocess.call(f'antechamber -i ./trajectories/model_{count}/ligand.pdb -fi pdb -o ./trajectories/model_{count}/ligand.prepi -fo prepi', shell = True)
-        check_exist_file('ligand.prepi')
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand.prepi')
 
         subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > '
                         f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
@@ -432,8 +440,11 @@ def make_separate_directory(file_all, protein, source, configfile):
                         shell=True)
         subprocess.call(f'echo END >> ./trajectories/model_{count}/complex_H.pdb',
                         shell=True)
-        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/complex_H.pdb -o ./trajectories/model_{count}/complex.pdb --nohyd')
-        check_exist_file('complex.pdb')
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/complex_H.pdb')
+        print(f'{os.getcwd()}')
+
+        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/complex_H.pdb -o ./trajectories/model_{count}/complex.pdb --nohyd', shell = True)
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/complex.pdb')
 
 def check_input_data(args):
         if not os.path.exists(args.protein):
@@ -450,7 +461,7 @@ def check_input_data(args):
             sys.exit(1)
 
 def check_exist_file(file):
-    if not os.path.exists(file):
+    if not os.path.exists(f'{file}') or os.path.getsize(file) < 0:
         print(f'File {file} does not exist. Exit framework.')
         sys.exit(1)
 def main():
@@ -473,8 +484,9 @@ def main():
     logging.root.setLevel(logging.DEBUG)
     logging.info(f'***Output from framework*** {strftime("%Y-%m-%d__%H-%M-%S", localtime())} \n')
     logging.info(f'#Protein : {args.protein} -> protein.pdb \n')
-    logging.info(f'#Ligand : {args.ligand} \n')
+    logging.info(f'#Ligand : {args.ligand}  {configfile["LIGAND"]["name"]} \n')
     logging.info(f'#Tunnel: {args.tunnel} \n')
+    logging.info(f'#Restraint: {args.restraint}')
     rslt_dir = os.getcwd() #args.results_dir
     source = os.getcwd()
 
@@ -482,9 +494,10 @@ def main():
         print("Verbosity turned on")
         print(f'Output from framework*** {strftime("%Y-%m-%d__%H-%M-%S", localtime())}')
         print(f'Protein : {args.protein} -> protein.odb')
-        print(f'Ligand : {args.ligand}')
+        print(f'Ligand : {args.ligand} {configfile["LIGAND"]["name"]}')
         print(f'Tunnel: {args.tunnel}')
         print(f'Dir for result: {rslt_dir}')
+        print(f'Restraint: {args.restraint}')
 
     # rename file to protein.pdb and remove ligand if it is necessary
     remove_ligand_from_emin(args.protein, args.verbose, configfile)
@@ -511,7 +524,7 @@ def main():
     # use new structure of protein  with ligand from amber
     dir=(f'{source}/trajectories/{strcre_for_amber_energy[0]}')
     os.chdir(dir)
-    run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand) # create new emin5.pdb with better structure
+    run_amber('protein.pdb', args.CD_lb_ub, args.verbose, configfile, args.ligand, args.restraint) # create new emin5.pdb with better structure
     os.chdir(source)
     if args.verbose:
         print(f'{str(configfile["TRAJECTORIES"]["path_trajectories"])}{strcre_for_amber_energy[0]}/emin5.pdb', 'new_protein_from_amber.pdb')
