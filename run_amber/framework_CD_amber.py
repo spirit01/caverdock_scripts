@@ -49,7 +49,7 @@ def get_argument():
     #parser.add_argument("-results_dir", help="Choose directory to save files.",
     #                    metavar="DIR", dest="results_dir")
 
-    parser.add_argument("-restraint", help = 'Set restrain for ligand', required=True)
+    parser.add_argument("-restraint", help = 'Set restrain for ligand. For example @CA,C,N|(:BEO)@C1,C2,C3', required=True)
 
     parser.add_argument("-v", "--verbose", help="increase output verbosity",
                        dest="verbose", action = "store_true")
@@ -169,7 +169,10 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand, restraint):
               f'-x mdcrd -r emin1.rst')
 
     try:
-
+        if verbose:
+            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
+                  f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                  f'-x mdcrd -r emin1.rst')
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
                         f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                         f'-x mdcrd -r emin1.rst', shell = True)
@@ -177,32 +180,48 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand, restraint):
                      f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
                      f'-x mdcrd -r emin1.rst')
 
+        if verbose:
+            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin2.in '
+                  f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
+                  f'-x mdcrd -r emin1.rst')
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
-                        f'-o emin2.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
                         f'-x mdcrd -r emin2.rst', shell = True)
         logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
-                     f'-o emin2.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
                      f'-x mdcrd -r emin2.rst')
 
+        if verbose:
+            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin3.in '
+                  f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
+                  f'-x mdcrd -r emin3.rst')
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
-                        f'-o emin3.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
                         f'-x mdcrd -r emin3.rst', shell = True)
         logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
-                     f'-o emin3.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
                      f'-x mdcrd -r emin3.rst')
 
+        if verbose:
+            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin4.in '
+                  f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
+                  f'-x mdcrd -r emin4.rst')
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
-                        f'-o emin4.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
                         f'-x mdcrd -r emin4.rst', shell = True)
         logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
-                     f'-o emin4.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
                      f'-x mdcrd -r emin4.rst')
 
+        if verbose:
+            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin5.in '
+                  f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
+                  f'-x mdcrd -r emin5.rst')
         subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
-                        f'-o emin5.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                        f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
                         f'-x mdcrd -r emin5.rst', shell = True)
         logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
-                     f'-o emin5.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
+                     f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
                      f'-x mdcrd -r emin5.rst')
 
         subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
@@ -350,21 +369,21 @@ def parse_structures(file_name):
     return file_all
 
 # check input for amber. Source is set in working directroy default.
-
-def check_files(source, protein, ligand):
+"""
+def check_files(source, protein, configfile):
 
     if not Path(f'{source}/{protein}').is_file():
         print(f'File {protein} not exist')
         sys.exit(1)
 
-    if not Path(f'{source}/_11_run_tleap').is_file():
+    if not Path(f'{configfile["11_RUN_TLEAP"]["11_run_tleap"]}').is_file():
         print("File _11_run_tleap not exist")
         sys.exit(1)
 
-    if not Path(f'{source}/_21_run_prepare_sander').is_file():
+    if not Path(f'{configfile["11_RUN_TLEAP"]["11_run_tleap"]}').is_file():
         print("File _21_run_prepare_sander not exist")
         sys.exit(1)
-
+"""
 
 
 def make_separate_directory(file_all, protein, source, configfile):
@@ -501,8 +520,7 @@ def main():
 
     # rename file to protein.pdb and remove ligand if it is necessary
     remove_ligand_from_emin(args.protein, args.verbose, configfile)
-    check_files(source, 'protein.pdb', args.ligand)
-    print(True)
+    #check_files(source, 'protein.pdb', args.config)
     if not args.traj:
         run_caverdock(args.ligand, args.tunnel, configfile, args.verbose)
         logging.info(f'#File from CaverDock: {str(configfile["RESULT_CD"]["name"])}-{args.CD_lb_ub}.pdbqt \n')
