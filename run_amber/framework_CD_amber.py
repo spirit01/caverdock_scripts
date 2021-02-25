@@ -445,7 +445,7 @@ def make_separate_directory(file_all, protein, source, configfile):
         subprocess.call(f'antechamber -i ./trajectories/model_{count}/ligand.pdb -fi pdb -o ./trajectories/model_{count}/ligand.prepi -fo prepi', shell = True)
         check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand.prepi')
 
-        subprocess.call(f'tail -n +2 \"./trajectories/model_{count}/ligand.pdb\" > '
+        subprocess.call(f'cat \"./trajectories/model_{count}/ligand.pdb\" > '
                         f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
 
         # split (ugly) ligand and protein into complex.pdb
