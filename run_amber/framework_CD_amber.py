@@ -164,66 +164,36 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand, restraint):
     check_exist_file('complex.prmtop')
     #subprocess.call(f'rm emin*.out; rm emin*.rst', shell=True)
 
-    if verbose:
-        print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
-              f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-              f'-x mdcrd -r emin1.rst')
-
     try:
+        command = configfile["SANDER"]["path_sander"] + ' -O -i emin1.in -o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd -x mdcrd -r emin1.rst'
         if verbose:
-            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin1.in '
-                  f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-                  f'-x mdcrd -r emin1.rst')
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
-                        f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-                        f'-x mdcrd -r emin1.rst', shell = True)
-        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin1.in '
-                     f'-o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd '
-                     f'-x mdcrd -r emin1.rst')
+            print(command)
+        subprocess.call(command, shell = True)
+        logging.info(command)
 
+        command = configfile["SANDER"]["path_sander"] + ' -O -i emin2.in -o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd -x mdcrd -r emin2.rst'
         if verbose:
-            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin2.in '
-                  f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
-                  f'-x mdcrd -r emin1.rst')
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
-                        f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
-                        f'-x mdcrd -r emin2.rst', shell = True)
-        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin2.in '
-                     f'-o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd '
-                     f'-x mdcrd -r emin2.rst')
+            print(command)
+        subprocess.call(command, shell = True)
+        logging.info(command)
 
+        command = configfile["SANDER"]["path_sander"] + ' -O -i emin3.in -o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd -x mdcrd -r emin3.rst'
         if verbose:
-            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin3.in '
-                  f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
-                  f'-x mdcrd -r emin3.rst')
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
-                        f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
-                        f'-x mdcrd -r emin3.rst', shell = True)
-        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin3.in '
-                     f'-o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd '
-                     f'-x mdcrd -r emin3.rst')
+            print(command)
+        subprocess.call(command, shell = True)
+        logging.info(command)
+        
+        command = configfile["SANDER"]["path_sander"] + ' -O -i emin4.in -o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd -x mdcrd -r emin4.rst'
+        if verbose:
+            print(command)
+        subprocess.call(command, shell = True)
+        logging.info(command)
 
+        command = configfile["SANDER"]["path_sander"] + ' -O -i emin5.in -o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd -x mdcrd -r emin5.rst'
         if verbose:
-            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin4.in '
-                  f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
-                  f'-x mdcrd -r emin4.rst')
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
-                        f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
-                        f'-x mdcrd -r emin4.rst', shell = True)
-        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin4.in '
-                     f'-o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd '
-                     f'-x mdcrd -r emin4.rst')
-
-        if verbose:
-            print(f'{(configfile["SANDER"]["path_sander"])} -O -i emin5.in '
-                  f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
-                  f'-x mdcrd -r emin5.rst')
-        subprocess.call(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
-                        f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
-                        f'-x mdcrd -r emin5.rst', shell = True)
-        logging.info(f'{configfile["SANDER"]["path_sander"]} -O -i emin5.in '
-                     f'-o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd '
-                     f'-x mdcrd -r emin5.rst')
+            print(command)
+        subprocess.call(command, shell = True)
+        logging.info(command)
 
         subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
                         f' -c emin1.rst > emin1.pdb', shell = True)
