@@ -507,8 +507,12 @@ def main():
     logging.info(f'#Ligand : {args.ligand}  {configfile["LIGAND"]["name"]} \n')
     logging.info(f'#Tunnel: {args.tunnel} \n')
     logging.info(f'#Restraint: {args.restraint}')
+    hash = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], cwd = "/shared/caverdock_scripts/run_amber", stdout=subprocess.PIPE)
+    print(f'hash je {hash.stdout.read().rstrip()}')
     rslt_dir = os.getcwd() #args.results_dir
+    print(f'work directory {os.getcwd()}')
     source = os.getcwd()
+    sys.exit(0)
 
     if args.verbose:
         print("Verbosity turned on")
