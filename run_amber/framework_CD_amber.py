@@ -168,60 +168,21 @@ def run_amber(protein, CD_lb_ub, verbose, configfile, ligand, restraint):
         command = configfile["SANDER"]["path_sander"] + ' -O -i emin1.in -o emin1.out -p complex.prmtop -c complex.inpcrd -ref ref.crd -x mdcrd -r emin1.rst'
         if verbose:
             print(command)
-        subprocess.call(command, shell = True)
         logging.info(command)
-
-        command = configfile["SANDER"]["path_sander"] + ' -O -i emin2.in -o emin2.out -p complex.prmtop -c emin1.rst -ref ref.crd -x mdcrd -r emin2.rst'
-        if verbose:
-            print(command)
         subprocess.call(command, shell = True)
-        logging.info(command)
+        for i in range(1,5):
+            command = configfile["SANDER"]["path_sander"] + ' -O -i emin' + str(i+1) + '.in -o emin' + str(i+1) + '.out -p complex.prmtop -c emin' + str(i) + '.rst -ref ref.crd -x mdcrd -r emin' + str(i+1) + '.rst'
+            if verbose:
+                print(command)
+            logging.info(command)
+            subprocess.call(command, shell = True)
 
-        command = configfile["SANDER"]["path_sander"] + ' -O -i emin3.in -o emin3.out -p complex.prmtop -c emin2.rst -ref ref.crd -x mdcrd -r emin3.rst'
-        if verbose:
-            print(command)
-        subprocess.call(command, shell = True)
-        logging.info(command)
-        
-        command = configfile["SANDER"]["path_sander"] + ' -O -i emin4.in -o emin4.out -p complex.prmtop -c emin3.rst -ref ref.crd -x mdcrd -r emin4.rst'
-        if verbose:
-            print(command)
-        subprocess.call(command, shell = True)
-        logging.info(command)
-
-        command = configfile["SANDER"]["path_sander"] + ' -O -i emin5.in -o emin5.out -p complex.prmtop -c emin4.rst -ref ref.crd -x mdcrd -r emin5.rst'
-        if verbose:
-            print(command)
-        subprocess.call(command, shell = True)
-        logging.info(command)
-
-        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
-                        f' -c emin1.rst > emin1.pdb', shell = True)
-        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
-                     f' -c emin1.rst > emin1.pdb')
-
-        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                        f' -c emin2.rst > emin3.pdb', shell = True)
-        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                     f' -c emin2.rst > emin3.pdb')
-
-        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                        f' -c emin3.rst > emin3.pdb', shell = True)
-        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                     f' -c emin3.rst > emin3.pdb')
-
-        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                        f' -c emin4.rst > emin4.pdb', shell = True)
-        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                     f' -c emin3.rst > emin3.pdb')
-
-        subprocess.call(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                        f' -c emin5.rst > emin5.pdb', shell = True)
-        logging.info(f'{configfile["AMBPDB"]["path_ambpdb"]}  -p complex.prmtop'
-                     f' -c emin5.rst > emin5.pdb')
-        if verbose:
-            print(f'First step: \n {configfile["AMBPDB"]["path_ambpdb"]} -p complex.prmtop'
-                  f' -c emin1.rst > emin1.pdb')
+        for i in range(1,6):
+            command = configfile["AMBPDB"]["path_ambpdb"] + ' -p complex.prmtop -c emin' + str(i) + '.rst > emin' + str(i) + '.pdb'
+            logging.info(command)
+            if (verbose) :
+                print(command)
+            subprocess.call(command, shell = True)
     except:
         logging.error('Cannot run amber. Check logfile.')
         print('Cannot run amber. Check logfile.')
