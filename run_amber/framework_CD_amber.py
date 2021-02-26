@@ -14,6 +14,7 @@ import logging
 from time import localtime, strftime
 import re
 
+
 # IN: protein, ligand, tunel,  traj in PDBQT format OR run CD and calculate PDBQT
 # OUT: new pdbqt file with better energy of trajectory OR step of trajectory with bottleneck
 
@@ -121,7 +122,7 @@ def run_caverdock(ligand, tunnel, configfile, verbose):
 
 def check_config_file(config, verbose):
     if verbose:
-        print(f'{config}')
+        print(f'Source config: {config}')
     if os.path.exists(f'{config}'):
         return True
     else:
@@ -495,7 +496,6 @@ def main():
     configfile = configparser.ConfigParser()
     configfile.read(f'{args.config}')
 
-
     hdlr = logging.FileHandler(
         f'framework_{strftime("%Y-%m-%d__%H-%M-%S", localtime())}.log')
     curr_dir = os.getcwd()
@@ -508,11 +508,10 @@ def main():
     logging.info(f'#Tunnel: {args.tunnel} \n')
     logging.info(f'#Restraint: {args.restraint}')
     hash = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], cwd = "/shared/caverdock_scripts/run_amber", stdout=subprocess.PIPE)
-    print(f'hash je {hash.stdout.read().rstrip()}')
+    #print(f'hash je {hash.stdout.read().rstrip()}')
+    logging.info(f'Hash from github: {hash.stdout.read().rstrip()}')
     rslt_dir = os.getcwd() #args.results_dir
-    print(f'work directory {os.getcwd()}')
     source = os.getcwd()
-    sys.exit(0)
 
     if args.verbose:
         print("Verbosity turned on")
@@ -522,6 +521,7 @@ def main():
         print(f'Tunnel: {args.tunnel}')
         print(f'Dir for result: {rslt_dir}')
         print(f'Restraint: {args.restraint}')
+        print(f'Hash from git: {hash.stdout.read().rstrip()}')
 
     # rename file to protein.pdb and remove ligand if it is necessary
     remove_ligand_from_emin(args.protein, args.verbose, configfile)
