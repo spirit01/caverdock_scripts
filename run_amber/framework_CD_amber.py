@@ -509,7 +509,8 @@ def main():
     logging.info(f'#Restraint: {args.restraint}')
     hash = subprocess.Popen(['git', 'rev-parse', '--short', 'HEAD'], cwd = "/shared/caverdock_scripts/run_amber", stdout=subprocess.PIPE)
     #print(f'hash je {hash.stdout.read().rstrip()}')
-    logging.info(f'Hash from github: {hash.stdout.read().rstrip()}')
+    hash_number = hash.stdout.read().rstrip()
+    logging.info(f'Hash from github: {hash_number}')
     rslt_dir = os.getcwd() #args.results_dir
     source = os.getcwd()
 
@@ -521,7 +522,7 @@ def main():
         print(f'Tunnel: {args.tunnel}')
         print(f'Dir for result: {rslt_dir}')
         print(f'Restraint: {args.restraint}')
-        print(f'Hash from git: {hash.stdout.read().rstrip()}')
+        print(f'Hash from git: {hash_number}')
 
     # rename file to protein.pdb and remove ligand if it is necessary
     remove_ligand_from_emin(args.protein, args.verbose, configfile)
