@@ -371,31 +371,34 @@ def make_separate_directory(file_all, protein, source, configfile):
                             f'-o {os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb', shell=True)
         check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb')
         subprocess.call(f'sed -i \'s/<0> d/{configfile["LIGAND"]["name"]} d/g\' ./trajectories/model_{count}/ligand_H.pdb', shell = True) #ligand_for_complex.pdb
-        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/ligand_H.pdb -o ./trajectories/model_{count}/ligand.pdb --nohyd', shell = True)
-        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand.pdb')
+
+        #subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/ligand_H.pdb -o ./trajectories/model_{count}/ligand.pdb --nohyd', shell = True)
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand_H.pdb')
 
         #subprocess.call(f'antechamber -i {ligand} -fi pdbqt -o ligand.pdb -if pdb', shell = True)
-        subprocess.call(f'antechamber -i ./trajectories/model_{count}/ligand.pdb -fi pdb -o ./trajectories/model_{count}/ligand.prepi -fo prepi', shell = True)
+        subprocess.call(f'antechamber -i ./trajectories/model_{count}/ligand_H.pdb -fi pdb -o ./trajectories/model_{count}/ligand.prepi -fo prepi', shell = True)
         check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/ligand.prepi')
 
-        subprocess.call(f'cat \"./trajectories/model_{count}/ligand.pdb\" > '
+        subprocess.call(f'cat \"./trajectories/model_{count}/ligand_H.pdb\" > '
                         f'\"./trajectories/model_{count}/ligand_for_complex.pdb\"', shell = True)
 
         # split (ugly) ligand and protein into complex.pdb
+        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/{protein} -o ./trajectories/model_{count}/protein_w_H.pdb --nohyd', shell = True)
+
         subprocess.call( #remove last line in file with END. IMPORTANT!
-            f'head -n -1 ./trajectories/model_{count}/{protein} > ./trajectories/model_{count}/complex_H.pdb | '
-            f'echo TER >> ./trajectories/model_{count}/complex_H.pdb',
+            f'head -n -1 ./trajectories/model_{count}/protein_w_H.pdb > ./trajectories/model_{count}/complex.pdb | '
+            f'echo TER >> ./trajectories/model_{count}/complex.pdb',
             shell=True)
         subprocess.call(f'cat ./trajectories/model_{count}/ligand_for_complex.pdb'
-                        f' >> ./trajectories/model_{count}/complex_H.pdb ',
+                        f' >> ./trajectories/model_{count}/complex.pdb ',
                         #f'| echo TER >> ./trajectories/model_{count}/complex.pdb',
                         shell=True)
-        subprocess.call(f'echo END >> ./trajectories/model_{count}/complex_H.pdb',
+        subprocess.call(f'echo END >> ./trajectories/model_{count}/complex.pdb',
                         shell=True)
-        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/complex_H.pdb')
+        check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/complex.pdb')
         print(f'{os.getcwd()}')
 
-        subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/complex_H.pdb -o ./trajectories/model_{count}/complex.pdb --nohyd', shell = True)
+        #subprocess.call(f'pdb4amber -i ./trajectories/model_{count}/complex_H.pdb -o ./trajectories/model_{count}/complex.pdb --nohyd', shell = True)
         check_exist_file(f'{os.getcwd()}/trajectories/model_{str(count)}/complex.pdb')
 
 def check_input_data(args):
@@ -448,7 +451,7 @@ def main():
     if args.verbose:
         print("Verbosity turned on")
         print(f'Output from framework*** {strftime("%Y-%m-%d__%H-%M-%S", localtime())}')
-        print(f'Protein : {args.protein} -> protein.odb')
+        print(f'Protein : {args.protein} -> protein.pdb')
         print(f'Ligand : {args.ligand} {configfile["LIGAND"]["name"]}')
         print(f'Tunnel: {args.tunnel}')
         print(f'Dir for result: {rslt_dir}')
