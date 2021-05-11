@@ -17,7 +17,7 @@ TOP=`ls *.prmtop`
 CRD=`ls *.inpcrd`
 
 cp $CRD ref.crd # copy initial coordinates to reference
-cat >> ./emin1.in <<EOF
+cat > ./emin1.in <<EOF
 # minimization with heavy atoms of complex restrained
  &cntrl
    imin=1,
@@ -31,7 +31,7 @@ cat >> ./emin1.in <<EOF
 /
 EOF
 
-cat >> ./emin2.in <<EOF
+cat > ./emin2.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
@@ -47,7 +47,7 @@ cat >> ./emin2.in <<EOF
 
 EOF
 
-cat >> ./emin3.in <<EOF
+cat > ./emin3.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
@@ -63,7 +63,7 @@ cat >> ./emin3.in <<EOF
 
 EOF
 
-cat >> ./emin4.in <<EOF
+cat > ./emin4.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
@@ -79,7 +79,7 @@ cat >> ./emin4.in <<EOF
 
 EOF
 
-cat >> ./emin5.in <<EOF
+cat > ./emin5.in <<EOF
 # minimization with restraints on backbone
  &cntrl
    imin=1,
