@@ -2,10 +2,12 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="563436c6-1b55-4f8b-9e70-49c84e5c6c76" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/make_amber_mask.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline_main_experiment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline_run_caverdock_amber.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/measure_deviation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/run_amber.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/run_amber.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline_main_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline_main_experiment.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -36,6 +38,7 @@
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
     <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
@@ -48,6 +51,28 @@
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RunManager" selected="Python.make_graph_repeated_trajectories">
+    <configuration default="true" type="PythonConfigurationType" factoryName="Python">
+      <module name="run_amber" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="true" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
     <configuration name="make_graph_repeated_trajectories" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="run_amber" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -171,7 +196,7 @@
       <workItem from="1619092203759" duration="602000" />
       <workItem from="1619424051531" duration="4230000" />
       <workItem from="1620104951495" duration="8007000" />
-      <workItem from="1620468454362" duration="5015000" />
+      <workItem from="1620468454362" duration="20721000" />
     </task>
     <servers />
   </component>

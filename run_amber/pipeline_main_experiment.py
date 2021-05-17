@@ -15,6 +15,9 @@ from time import localtime, strftime
 import re
 import pytraj as pt
 from Bio.PDB import NeighborSearch, PDBParser, Selection
+from statistics import stdev
+from fractions import Fraction as fr
+
 
 class SpecialFormatter(logging.Formatter):
     FORMATS = {logging.DEBUG: logging._STYLES['{'][0]("DEBUG: {message}"),
@@ -50,6 +53,14 @@ def check_config_file(config, verbose):
         return True
     else:
         print('Config.ini file does not exist!')
+
+# run caverdock
+
+# run amber in the bottleneck
+
+# stopping condition for calculation
+def stop_experiments():
+    pass
 
 def main():
     args = get_argument()
