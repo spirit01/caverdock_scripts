@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="563436c6-1b55-4f8b-9e70-49c84e5c6c76" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/make_amber_mask.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline_main_experiment.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/pipeline_run_caverdock_amber.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/pipeline_caver.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tunnel_coordinates_remapping.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/tunnel_similarity_search.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README" beforeDir="false" afterPath="$PROJECT_DIR$/README" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_11_run_tleap" beforeDir="false" afterPath="$PROJECT_DIR$/_11_run_tleap" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/_21_run_prepare_sander" beforeDir="false" afterPath="$PROJECT_DIR$/_21_run_prepare_sander" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config.ini" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/make_amber_mask.py" beforeDir="false" afterPath="$PROJECT_DIR$/make_amber_mask.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/pipeline_main_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline_main_experiment.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -29,27 +39,31 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
   <component name="ProjectId" id="1XfDLh2WyjdXXPt7hHGtZUvte8f" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">
-    <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="WebServerToolWindowPanel.toolwindow.highlight.mappings" value="true" />
-    <property name="WebServerToolWindowPanel.toolwindow.highlight.symlinks" value="true" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.date" value="false" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.permissions" value="false" />
-    <property name="WebServerToolWindowPanel.toolwindow.show.size" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../../../../ensemble-fit_docker_version/SAXS" />
-    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
-    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
-  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/petranem/Dokumenty/HPC/caverdock_scripts/run_amber&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
   <component name="RunManager" selected="Python.make_graph_repeated_trajectories">
     <configuration name="make_graph_repeated_trajectories" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="run_amber" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -72,6 +86,7 @@
     </configuration>
     <configuration name="parse_structures_from_caverdock" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="run_amber" />
+      <option name="ENV_FILES" value="" />
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -93,8 +108,8 @@
       <method v="2" />
     </configuration>
     <list>
-      <item itemvalue="Python.parse_structures_from_caverdock" />
       <item itemvalue="Python.make_graph_repeated_trajectories" />
+      <item itemvalue="Python.parse_structures_from_caverdock" />
     </list>
     <recent_temporary>
       <list>
@@ -103,6 +118,15 @@
       </list>
     </recent_temporary>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-1d06a55b98c1-0b3e54e931b4-JavaScript-PY-241.18034.82" />
+        <option value="bundled-python-sdk-975db3bf15a3-2767605e8bc2-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-241.18034.82" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -172,25 +196,15 @@
       <workItem from="1619424051531" duration="4230000" />
       <workItem from="1620104951495" duration="8007000" />
       <workItem from="1620468454362" duration="5015000" />
+      <workItem from="1721659773323" duration="23000" />
+      <workItem from="1721659803290" duration="15037000" />
+      <workItem from="1721806462286" duration="29591000" />
+      <workItem from="1721980061878" duration="9487000" />
+      <workItem from="1722333288721" duration="32349000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="1" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="3143" y="291" width="424" height="491" key="FileChooserDialogImpl" timestamp="1599060200238">
-      <screen x="1920" y="0" width="1920" height="1080" />
-    </state>
-    <state x="1223" y="311" width="424" height="491" key="FileChooserDialogImpl/0.27.1920.1053@0.27.1920.1053" timestamp="1597388223260" />
-    <state x="3143" y="291" key="FileChooserDialogImpl/1920.0.1920.1080/3840.0.3840.2160/0.27.1920.1053@1920.0.1920.1080" timestamp="1599060200238" />
-    <state x="2652" y="473" width="445" height="167" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2" timestamp="1604864022265">
-      <screen x="1920" y="0" width="1920" height="1080" />
-    </state>
-    <state x="2652" y="473" width="445" height="167" key="com.intellij.openapi.vcs.update.UpdateOrStatusOptionsDialogupdate-v2/1920.0.1920.1080/3840.0.3840.2160/0.27.1920.1053@1920.0.1920.1080" timestamp="1604864022265" />
-    <state x="2605" y="466" width="540" height="182" key="vcs.readOnlyHandler.ReadOnlyStatusDialog" timestamp="1604254807570">
-      <screen x="1920" y="0" width="1920" height="1080" />
-    </state>
-    <state x="2605" y="466" width="540" height="182" key="vcs.readOnlyHandler.ReadOnlyStatusDialog/1920.0.1920.1080/3840.0.3840.2160/0.27.1920.1053@1920.0.1920.1080" timestamp="1604254807570" />
+    <option name="version" value="3" />
   </component>
 </project>

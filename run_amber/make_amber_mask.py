@@ -15,6 +15,7 @@ from time import localtime, strftime
 import re
 import pytraj as pt
 from Bio.PDB import NeighborSearch, PDBParser, Selection
+import matplotlib.pyplot as plt
 
 class SpecialFormatter(logging.Formatter):
     FORMATS = {logging.DEBUG: logging._STYLES['{'][0]("DEBUG: {message}"),
@@ -30,7 +31,8 @@ class SpecialFormatter(logging.Formatter):
 def get_argument():
     parser = ArgumentParser()
 
-    #parser.add_argument("-protein", help="Structure of protein in format pdb.", type=Path)
+    parser.add_argument("-protein1", help="Structure of protein in format pdb.")
+    parser.add_argument("-protein2", help="Structure of protein in format pdb.")
 
     #parser.add_argument("-ligand", help = 'Ligands name in pdbqt format.', type=Path, required=True)
 
@@ -54,7 +56,7 @@ def check_config_file(config, verbose):
 def main():
     args = get_argument()
     #check_input_data(args)
-    print(f'Current working directory: {os.getcwd()}')
+    #print(f'Current working directory: {os.getcwd()}')
 
     #if not check_config_file(args.config, args.verbose):
     #    sys.exit(1)
@@ -71,22 +73,37 @@ def main():
     #logging.info(f'#Ligand : {args.ligand}  {configfile["LIGAND"]["name"]} \n')
     #logging.info(f'#Tunnel: {args.tunnel} \n')
 
-    pdb = pt.load("protein_with_tunnel.pdb")
-    pdb_topology = pt.load_topology('protein_with_tunnel.pdb')
+    pdb1 = pt.load(args.protein1)
+    pdb_topology1 = pt.load_topology(args.protein1)
+    pdb2 = pt.load(args.protein2)
+    pdb_topology2 = pt.load_topology(args.protein2)
+
     restraint_residue = []
 
-    for i in range(1, pdb_topology.n_residues):
+    for i in range(1, pdb_topology1.n_residues):
         #print(f'\':{i} FIL T\'')
         string_index = f':{i} :FIL T'
-        if pt.distance(pdb, string_index)<12.0:
+        if pt.distance(pdb1, string_index)<12.0:
         #    simp_top = pdb_topology.simplify()
             #name = simp_top.residue()
-            restraint_residue.append(f'{pdb_topology.residue(i).index},')
+            restraint_residue.append(f'{pdb_topology1.residue(i).index},')
             #string_residues.join(f':{pdb_topology.residue(i).index}')
             #restraint_residue.append(name)
+    
+    #        print(i, pt.distance(pdb, string_index))
+
     string_residues = ' '.join([str(elem) for elem in restraint_residue])
-    print(string_residues)
 
-
+   # print(string_residues)
+    data = []
+    for i in range(1, pdb_topology1.n_residues):
+        string_index = f':{i} :FIL T'
+        diff = abs(pt.distance(pdb1, string_index)[0]- pt.distance(pdb2, string_index)[0])
+        if float(diff)*100 < 20: 
+            data.append(diff*100)
+        print(i, diff, diff*100)
+    plt.hist(data,8)
+#    plt.show()
+    plt.savefig('histogram.png')
 if __name__ == '__main__':
     main()

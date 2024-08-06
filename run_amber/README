@@ -1,85 +1,52 @@
-README
+# framework_paper
 
-parse_structures_from_caverdock.py pouštím na svém lokálním stroji.
+Framework combines CaverDock and minimization protocol. Before you run the framework,
+you have to install:
 
-ukázka spuštění:
+    Amber (sander)
+    AmberTools (ambpdb, antechamber, )
+    MGLTools (prepare_receptor, prepare_ligand)
+    python3:x + pandas, matplotlib
 
-../process_data_META/run_amber/parse_structures_from_caverdock.py
--file_path ./test.pdbqt-ub.pdbqt -protein ./1RC2-h.pdb
--source /home/petrahrozkova/Dokumenty/HPC/1RC2_protein/
+Input:
 
-META:
-run_amber pouštím na META, ukázka vstupu:
+    <'receptor'>.pdb
+    <'ligand'>.pdbqt
+    <'tun'>.dsd (disretizated tunnel from Caver)
+    restraint mask
+    config.ini
+    _11_run_tleap
+    _21_run_prepare_sander
 
-- je dobré zkontrolovat verzi pythonu na META. Ne vždy je tam verze 3.6 + přidat modul ambru
+Output:
 
-DŮLEŽITÉ! module add amber-18, 16 a 14. Záleží na pořadí. a python-3.6.
- amber-16 - zlobí %8.3 format
- anber-18 - vypadá to lépe. Problém s pyton-3.6. a amber
-
-(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-18
-(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-16
-(STRETCH)petrahrozkova@elmo5-12:~$ module add amber-14
-(STRETCH)petrahrozkova@elmo5-12:~$ module add python-3.4.1-gcc
-(STRETCH)petrahrozkova@elmo5-12:~$ pwd
-/storage/brno11-elixir/home/petrahrozkova
-
-./run_amber.py -source ./trajectorie
-bash run_21_run_meta - pusti qsub ./_21_run-mm_meta.sh na vsechny slozky trajectories
-bash skript_out_2_pdb - vytvori z emin1.rst > emin1.pdb
-
-NTB:
-nutno zkopirovat :útrajectories na ntb pro dalsi analyzu
-collect_result vytvoří soubor - pouštím u sebe, vytvori soubor result_CD_AMBER.txt, ze ktereho
-graf_porovnani_CD_amber.txt udela graf_CD_amber.png
-
-antechamber potřebuje přesný rozestup mezi sloupci v pdb ligand
-ATOM      9  H6  TIP d   1      79.318   8.180 -26.934  1.00  0.00      posi H
+    new_protein_0 - new_protein_<'n'>
+    framework_<'date'>
+    bottleneck_<'n'>
+    result_CD_<'n'>
+    dir trajectory_<'n'>
+    graph_energy_all.png
 
 
-make_trajectorie_from_amber - vezme všechny emin5.pdb a udělá z toho jeden velký pd soubor,
-kde jednotlive behy jsou odddeleny jako MODEL číslo.
-Nutno ještě ručně %s/END//g odstranit END a dát jenom jeden nakonec souboru.
+**graph_energy_all.png:**
+There are all CaverDock runs together with bottleneck from each step of minimization.
 
-tvorba_slozky_s_pdb_soubory - vytvori složku, kde jsou pouze emin5.pdb pro lepší vizualizaci.
-Nutno mít v trajectories. Slozka pdb_files musi byt vytvorena
+**trajectory_<'n'>**
+There is information about all position of ligand in the trajectory. In the
+disk with bottleneck (e.g. model_54) you can find the concrete information
+about minimization (emin<1-5>.in, emin<1-5>.out, emin<1-5>.pdb, tleap.in, tleap.out)
 
-make_trajectorie_from_amber - - vytvori soubor, kde jsou pouze emin5.pdb pro lepší vizualizaci.
-Nutno mít v trajectories. Zároveň jsou jednotlivé struktury odděleny pomocí MODEL
+**_11_run_tleap**
+Contains information about force field used for minimization
 
-export TXT=""; for (( i = 60; i < 70; i++ )); do export TXT=$TXT"struktura_model_$i.pdb";
-done; pymol $TXT
-
-ve slozce, kde je uz ligand vytazeny z pdb souboru
-export TXT=""; for (( i = 1; i < 143; i++ )); do export TXT=$TXT" ligand_$i.pdb"; done; pymol $TXT
+**_21_run_prepare_sander**
+Contains information about minimization steps
 
 
-- vytvoří list, který rovnou předhodí pymolu pro hezkou vizualizaci
 
-data:
-trajectorie_omz_ligand ->    ntr=1,restraint_wt=1.0,restraintmask='@CA,C,N|(:TIP)@C1'
-trajectories_omz_vsechno ->    ntr=1,restraint_wt=100.0,restraintmask='@CA,C,N'
--> slozka s emin5.pdb je v kazde slozce. spustim pomoci:
-export TXT=""; for (( i = 60; i < 70; i++ )); do export TXT=$TXT" model_$i.pdb";
-done; pymol $TXT
 
-udela hezke movie z ligandu
-echo "" > model-movie.pdb; for (( i=0; i < 145; i++ )); do cd model_$i; echo "MODEL $i" >> ../model-movie.pdb; grep TIP emin5.pdb >> ../model-movie.pdb; echo "ENDMDL" >> ../model-movie.pdb; cd ..; done
 
-parametr pro zadání úlohy amber
-qsub -I -N NN-min -l select=1:ncpus=8:mem=2gb:scratch_local=1gb -j oe -m a -l walltime=24:0:0
 
- /home/petrahrozkova/MGLTools-1.5.6/mgltools_i86Linux2_1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/
 
-for i in /home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p1/32/trajectories/*; do  cd $i; ls ; echo $i; cp ../../../../../_21* .;  done; cd ..;
 
-for i in /home/petrahrozkova/Dokumenty/HPC/halogenasa/data-linb_lb_new/p1/32/trajectories/model_*/; do cd $i;/opt/mgltools-1.5.6/bin/pythonsh /opt/mgltools-1.5.6/MGLToolsPckgs/AutoDockTools/Utilities24/pdbqt_to_pdb.py -f "$i"position_ligand_*.pdbqt -o "$i"ligand.pdb; done
 
-caverdock_1.1.sif is in singularity: singularity run (-B slozka:/home/) caverdcok_1.1.sif
-
-kopiruje jenom vybraný soubor ze složky do složky
-rsync -av --prune-empty-dirs --include '*/' --include 'emin5.pdb' --exclude '*' perian:/storage/plzen1/home/petrahrozkova/jirka_test_data/1/aspirin/trajectories/ .;
-
-for i in /home/petrahrozkova/Dokumenty/HPC/test_amber_plus_caverdock/halogenasa_uprava_podle_amberu/data_testovani_amber/fix_all/lb/p3/wt/protein_*/; do cd $i; ls; cd-energyprofile -d tun-ex.dsd -t result_caverdock-lb.pdbqt -s 0 > energy_lb.dat; done;
-
-rsync -anv --prune-empty-dirs --include '*/' --include 'emin*.out' --include 'emin5.pdb' --exclude '*' petra@147.251.54.159:/shared/CD2-DhaA/work_in_progress/P3/01-WT/fix_C/trajectories_descent_algrtm .
