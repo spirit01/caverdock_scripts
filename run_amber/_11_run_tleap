@@ -4,8 +4,8 @@
 # source /software/loslab/activate.sh
 # module add amber-14-ll
 
-PDB=complex0.pdb # the input pdb file with complex
-#PREPI=ligand.prepi 				# prepi fiel with lignad parameters
+PDB=complex.pdb # the input pdb file with complex
+PREPI=ligand.prepi 				# prepi fiel with lignad parameters
 # 1) Use tlead to generate pdb and topology for complex from all parameter files
 rm tleap.* complex_leap.pdb
 
@@ -18,9 +18,9 @@ set default PBradii mbondi3
 
 loadamberparams frcmod_lig2
 
-#loadamberprep $PREPI
+loadamberprep $PREPI
 c = loadpdb $PDB
-saveAmberParm c complex0.prmtop complex0.inpcrd
+saveAmberParm c complex.prmtop complex.inpcrd
 
 savepdb c complex_leap.pdb
 quit

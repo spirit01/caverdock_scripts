@@ -15,6 +15,8 @@
 
 TOP=`ls *.prmtop`
 CRD=`ls *.inpcrd`
+MAXCYC=500
+NCYC=250
 
 cp $CRD ref.crd # copy initial coordinates to reference
 cat > ./emin1.in <<EOF
@@ -24,7 +26,7 @@ cat > ./emin1.in <<EOF
    ntr=1,restraint_wt=500.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
-   maxcyc=500, ncyc=250,
+   maxcyc=$MAXCYC, ncyc=$NCYC,
 /
 &gb
   igb=8, saltcon=0.100
@@ -38,7 +40,7 @@ cat > ./emin2.in <<EOF
    ntr=1,restraint_wt=100.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
-   maxcyc=500, ncyc=250,
+   maxcyc=$MAXCYC, ncyc=$NCYC,
 
 /
 &gb
@@ -54,7 +56,7 @@ cat > ./emin3.in <<EOF
    ntr=1,restraint_wt=50.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
-   maxcyc=500, ncyc=250,
+   maxcyc=$MAXCYC, ncyc=$NCYC,
 
 /
 &gb
@@ -70,7 +72,7 @@ cat > ./emin4.in <<EOF
    ntr=1,restraint_wt=25.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
-   maxcyc=500, ncyc=250,
+   maxcyc=$MAXCYC, ncyc=$NCYC,
 
 /
 &gb
@@ -86,7 +88,7 @@ cat > ./emin5.in <<EOF
    ntr=1,restraint_wt=1.0,restraintmask='$1',
    ntpr=100, ntwx=100, igb=8
 
-   maxcyc=500, ncyc=250,
+   maxcyc=$MAXCYC, ncyc=$NCYC,
 
 /
 &gb

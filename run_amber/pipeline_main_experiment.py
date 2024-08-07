@@ -281,7 +281,7 @@ def main():
     #  -2: last iteration contains repeted residuum. In the example [('ARG', '155'), ('ILE', '210'), ('TRP', '139'),
     #  ('ILE', '210')] with '-2( makes it 3 iterations and skip the last one -
     # correct behavior
-    if exps.all_experiments[order_of_experiment-1] == 2:  # special condition for only two runs of framework
+    if exps.all_experiments[order_of_experiment-1] == 2:  # speial condition for only two runs of framework
         pipeline_make_graph.plot_graph(exps.all_experiments[order_of_experiment - 1].order_of_experiment,
                                        exps[order_of_experiment - 1].CD_lb_ub, exps[order_of_experiment - 1].df, exps,
                                        configfile)

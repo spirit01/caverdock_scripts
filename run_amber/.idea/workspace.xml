@@ -5,17 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="563436c6-1b55-4f8b-9e70-49c84e5c6c76" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/pipeline_caver.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tunnel_coordinates_remapping.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tunnel_similarity_search.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README" beforeDir="false" afterPath="$PROJECT_DIR$/README" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_11_run_tleap" beforeDir="false" afterPath="$PROJECT_DIR$/_11_run_tleap" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/_21_run_prepare_sander" beforeDir="false" afterPath="$PROJECT_DIR$/_21_run_prepare_sander" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config.ini" beforeDir="false" afterPath="$PROJECT_DIR$/config.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/make_amber_mask.py" beforeDir="false" afterPath="$PROJECT_DIR$/make_amber_mask.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pipeline_main_experiment.py" beforeDir="false" afterPath="$PROJECT_DIR$/pipeline_main_experiment.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/other.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/measure_deviation.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/run_amber.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/run_amber.iml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,7 +43,7 @@
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Merging master&quot;,
     &quot;last_opened_file_path&quot;: &quot;/home/petranem/Dokumenty/HPC/caverdock_scripts/run_amber&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
